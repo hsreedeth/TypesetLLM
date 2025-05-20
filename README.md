@@ -19,5 +19,5 @@ ChatGPT is great for taking notes, but turning those into beautiful, readable PD
 - **PDF engine:** Browser “Print to PDF”
 - **Hosting:** GitHub Pages
 
-## 📁 Folder Layout
+## Folder Layout
 
