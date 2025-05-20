@@ -1,1 +1,23 @@
-md<br># <Project Title><br><br>## Problem<br>One-click, vintage-style PDFs from any ChatGPT notes.<br><br>## MVP Features<br>* Paste or upload Markdown<br>* Click “Render” → PDF with vintage stylesheet<br><br>## Tech Stack<br>* Front-end: vanilla&nbsp;JS + Paged.js<br>* PDF engine: browser print to PDF (no server)<br>* Hosting: GitHub Pages<br><br>## Folder Layout<br>├── assets/fonts/<br>├── src/css/<br>├── src/js/<br>└── index.html<br><br>## Licence<br>MIT for code; see *assets/fonts/* for font licences.<br>
+# 🗒️ Publication Ready PDF Renderer for Large Language Models
+
+One-click, vintage-style PDFs from any ChatGPT notes — directly in your browser.
+
+## Problem
+
+ChatGPT is great for taking notes, but turning those into beautiful, readable PDFs is a hassle. This tool lets you paste or upload Markdown, click “Render,” and instantly get a vintage-styled PDF — no server, no fuss.
+
+## MVP Features
+
+- ✅ Paste or upload Markdown
+- ✅ One-click “Render” to PDF
+- ✅ Vintage stylesheet applied automatically
+- ✅ Entirely client-side (no backend)
+
+## Tech Stack
+
+- **Front-end:** Vanilla JavaScript + [Paged.js](https://pagedjs.org/)
+- **PDF engine:** Browser “Print to PDF”
+- **Hosting:** GitHub Pages
+
+## 📁 Folder Layout
+
