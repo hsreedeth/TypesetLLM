@@ -1,4 +1,4 @@
-# 🗒️ Publication Ready PDF Renderer for Large Language Models
+# Publication Ready PDF Renderer for Large Language Models
 
 One-click, vintage-style PDFs from any ChatGPT notes — directly in your browser.
 
