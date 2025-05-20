@@ -21,3 +21,7 @@ ChatGPT is great for taking notes, but turning those into beautiful, readable PD
 
 ## Folder Layout
 
+/assets/fonts/ # Vintage-style fonts (+ their licenses)
+/src/css/ # Stylesheets including vintage themes
+/src/js/ # JavaScript logic for rendering
+index.html # Entry point for the app
