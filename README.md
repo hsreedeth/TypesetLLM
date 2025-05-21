@@ -4,7 +4,7 @@ One-click, publication style hand-out PDFs from any ChatGPT notes — directly i
 
 ## Problem
 
-ChatGPT is great for taking notes, but turning those into beautiful, publications style latex rendered PDFs is a hassle. This tool lets you paste or upload Markdown (ideally copied from any language model outputs), click “Render,” and instantly get a vintage-styled PDF — no server, no fuss.
+ChatGPT is great for taking notes, but turning those into beautiful, publications style latex rendered PDFs is a hassle. This tool lets you paste or upload Markdown (ideally copied from any language model outputs), click “Render,” and instantly get an academic/publication styled PDF. No server, no fuss.
 
 ## MVP Features
 
