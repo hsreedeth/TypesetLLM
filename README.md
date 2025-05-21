@@ -8,11 +8,11 @@ ChatGPT is great for taking notes, but turning those into beautiful, publication
 
 ## MVP Features
 
-The following is an MVP prototype under development. It is undergoing iterative improvements. In the meantime, the following are the features that has been locled down and up and running.
+The program as it stands now, qualifies as an MVP. It is currently under development and is undergoing iterative improvements. In the meantime, the following features are live and locked down.
 
 - ✅ Paste or upload Markdown
 - ✅ One-click “Render” to PDF
-- ✅ Vintage stylesheet applied automatically
+- ✅ Classic latex markdown stylesheet applied automatically. The rendering includes beautiful figures and tables. 
 - ✅ Entirely client-side (no backend)
 
 ## Tech Stack
