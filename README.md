@@ -1,4 +1,4 @@
-# LaTex-It: Publication Ready PDF Renderer for Large Language Models
+# GPT2PDF: Publication Ready PDF Renderer for Large Language Models
 
 One-click, publication style hand-out PDFs from any ChatGPT notes — directly in your browser.
 
