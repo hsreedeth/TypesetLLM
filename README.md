@@ -1,30 +1,44 @@
-# GPT2PDF: Publication Ready PDF Renderer for Large Language Models
+# GPT2PDF (a.k.a. MD2PDF)
 
-One-click, publication style hand-out PDFs from any ChatGPT notes — directly in your browser.
+**Convert Markdown (e.g. ChatGPT notes) into publication-quality PDFs**  
+via a simple CLI or HTTP API, powered by Pandoc + XeLaTeX and packaged in Docker.
 
-## Problem
+---
 
-ChatGPT is great for taking notes, but turning those into beautiful, publications style latex rendered PDFs is a hassle. This tool lets you paste or upload Markdown (ideally copied from any language model outputs), click “Render,” and instantly get an academic/publication styled PDF. No server, no fuss.
+## Alpha Build v1.0 (MVP)
 
-## MVP Features
+1. **`md2pdf` CLI**  
+   - `md2pdf input.md -o output.pdf --markdown-format gfm`  
+   - Offline, reproducible Pandoc → XeLaTeX pipeline  
+   - Custom vintage template + Lua filters for tables, multi-column layouts, fonts
 
-The program as it stands now, qualifies as an MVP. It is currently under development and is undergoing iterative improvements. In the meantime, the following features are live and locked down.
+2. **FastAPI HTTP Service**  
+   - `POST /convert` accepts JSON `{ text, theme, markdown_format }` → returns PDF  
+   - Rate-limited (60 reqs/hr/IP) with built-in `/health` endpoint for smoke tests  
+   - Safe: strips dangerous LaTeX commands (e.g. `\input`, `\write18`)
 
-- ✅ Paste or upload Markdown
-- ✅ One-click “Render” to PDF
-- ✅ Classic latex markdown stylesheet applied automatically. The rendering includes beautiful figures and tables. 
-- ✅ Entirely client-side (no backend)
+3. **Containerisation**  
+   - **Two-stage Docker build**  
+     - Stage 1: install TinyTeX (“small” scheme) + exactly the LaTeX packages you need  
+     - Stage 2: copy only the PDF runtime (TinyTeX + Pandoc + Python deps) → ~300 MB image  
+   - Makefile shortcuts: `make build`, `make dev`, `make demo`  
+
+---
 
 ## Tech Stack
 
-- **Front-end:** Vanilla JavaScript + [Paged.js](https://pagedjs.org/)
-- **PDF engine:** Browser “Print to PDF”
-- **Hosting:** GitHub Pages
+- **Core**: Python 3.11, FastAPI, Pydantic, asyncio  
+- **PDF Engine**: Pandoc 3.2 + XeLaTeX (TinyTeX “small” profile + Lua filters)  
+- **Rate-Limiting**: slowapi (Redis-free, in-process)  
+- **Container**: Docker (multi-stage build)  
+- **CI/CD**: GitHub Actions (build, test, smoke-test, push to registry)  
+- **Deployment**: Render.com / Fly.io / Railway (Docker)
 
-## Folder Layout
+---
 
+## Getting Started
 
-- assets/fonts/      → Vintage-style fonts (+ their licenses)
-- src/css/           → Stylesheets including vintage themes
-- src/js/            → JavaScript logic for rendering
-- index.html         → Entry point for the app
+1. **Clone & configure**  
+   ```bash
+   git clone https://github.com/<you>/GPT2PDF.git
+   cd GPT2PDF
