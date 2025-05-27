@@ -40,5 +40,5 @@ via a simple CLI or HTTP API, powered by Pandoc + XeLaTeX and packaged in Docker
 
 1. **Clone & configure**  
    ```bash
-   git clone https://github.com/<you>/GPT2PDF.git
+   git clone https://github.com/hsreedeth/GPT2PDF.git
    cd GPT2PDF
