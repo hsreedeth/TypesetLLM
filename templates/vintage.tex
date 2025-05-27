@@ -1,0 +1,70 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+
+% -------------------- Fonts --------------------
+\usepackage{fontspec}
+\setmainfont{IBM Plex Serif}
+\setsansfont{Fira Code}
+\setmonofont{Fira Code}
+
+% -------------------- Header / footer ----------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[LE,RO]{\small MD2PDF alpha v1.0}
+\fancyhead[LO,RE]{\small \leftmark}
+\fancyfoot[C]{\thepage}
+
+% -------------------- Section titles -----------
+\usepackage{titlesec}
+\titleformat{\section}{\bfseries\large}{\thesection}{1em}{}
+
+% % -------------------- Tables -------------------
+\usepackage{array}       % p{}, >{\raggedright} etc.
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{calc}        % for Pandoc’s (\linewidth - …) formula
+% % \providecommand{\real}[1]{#1}  % Pandoc helper
+% % \renewcommand{\arraystretch}{1.2}  % a bit more breathing room
+
+
+% -------------------- Lists --------------------
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% -------------------- Maths --------------------
+\usepackage{amsmath,amssymb}
+
+% -------------------- Hyperlinks --------------
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  filecolor=magenta,
+  urlcolor=cyan,
+  pdftitle={$title$},
+}
+
+% -------------- Pandoc syntax highlighting -----
+$if(highlighting-macros)$
+$highlighting-macros$
+$endif$
+
+% -------------------- Code blocks --------------
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{%
+  commandchars=\\\{\}, fontsize=\scriptsize}
+
+% -------------- Un-numbered sections -----------
+\setcounter{secnumdepth}{0}
+
+% -------------- 6col lua helper pack -----------
+\usepackage{xfp}
+\usepackage{pdflscape} 
+\usepackage{graphicx}
+\usepackage{adjustbox}
+
+\begin{document}
+$body$
+\end{document}
