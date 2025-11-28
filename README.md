@@ -1,4 +1,4 @@
-# GPT2PDF (a.k.a. MD2PDF)
+# GPT2PDF (a.k.a. MD2PDF) (Note: This project is under construction)
 
 **Convert Markdown (e.g. ChatGPT notes) into publication-quality PDFs**  
 via a simple CLI or HTTP API, powered by Pandoc + XeLaTeX and packaged in Docker.
