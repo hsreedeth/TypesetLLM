@@ -83,3 +83,14 @@ The suite exercises both the CLI and API. Pandoc + XeLaTeX must be installed or 
 - Keep inputs under 10 kB to stay within the API limit and avoid long TeX runs.
 - If PDFs come out blank, verify font availability and that `xelatex` works from your shell.
 - Two trees (`latexit` and `latexit copy`) exist—do your work in `latexit` to match tests and Docker context.
+
+## Samples (Generated)
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://i.postimg.cc/TwBdkT7T/Screenshot_2025_12_22_at_5_41_28_AM.png" />
+</div>
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://i.postimg.cc/V62f7zGJ/Screenshot_2025_12_22_at_5_40_15_AM.png" />
+</div>
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://i.postimg.cc/mkMbJKJF/Screenshot_2025_12_22_at_5_37_51_AM.png" />
+</div>
