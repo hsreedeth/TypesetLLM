@@ -1,44 +1,63 @@
-# GPT2PDF (a.k.a. MD2PDF) (Note: This project is under construction)
+# GPT to Publication: Professional PDF Orchestrator
 
-**Convert Markdown (e.g. ChatGPT notes) into publication-quality PDFs**  
-via a simple CLI or HTTP API, powered by Pandoc + XeLaTeX and packaged in Docker.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/hsreedeth/GPTnotesToPublicationStylePDF)
+
+**Bridging the gap between AI-driven brainstorming and academic-grade typesetting.**
+
+LLMs like GPT-4 are incredible for drafting ideas, but their raw outputs are often unformatted, lacks structured bibliographies, and doesn't meet the rigorous standards of journals (IEEE, ACM, etc.). This repository provides a robust pipeline to transform raw GPT-generated notes into publication-ready, beautifully typeset PDFs.
+
+## 🚀 Key Features
+
+*   **Intelligent Parsing**: Automatically detects mathematical notation, code blocks, and hierarchical structures from LLM exports.
+*   **LaTeX Integration**: Seamless conversion to .tex files with pre-configured templates for IEEE, ACM, and generic scientific papers.
+*   **Bibliography Support**: Simple workflows for merging BibTeX citations with your AI-drafted content.
+*   **Customizable Theming**: Toggle between "Journal Style", "Modern Technical Report", and "Clean Draft" modes.
+
+## 🛠️ Installation
+
+Ensure you have a TeX distribution (like TeX Live or MiKTeX) and Python 3.8+ installed.
+
+```bash
+# Clone the repository
+git clone https://github.com/hsreedeth/GPTnotesToPublicationStylePDF.git
+cd GPTnotesToPublicationStylePDF
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+## 🔄 The Workflow
+
+1.  **Draft**: Generate your technical content using your favorite LLM.
+2.  **Export**: Save the chat or output as a `.txt` or `.md` file in the `input/` directory.
+3.  **Process**: Run the conversion script:
+    ```bash
+    python orchestrator.py --input my_notes.md --style ieee
+    ```
+4.  **Polish**: The script generates a `.tex` project. Open it in Overleaf or your local TeX editor for final manual tweaks.
+5.  **Compile**: Generate your high-resolution PDF.
+
+## 📖 Usage Examples
+
+### Converting a Markdown Note
+To convert a raw markdown export into a two-column IEEE style paper:
+```bash
+python converter.py --src data/raw_notes.md --template ieee_2column --out research_paper.pdf
+```
+
+### Customizing Math Rendering
+This tool ensures that GPT's LaTeX-style math (e.g., `\( E=mc^2 \)`) is correctly escaped and wrapped in appropriate LaTeX environments for the target template.
+
+## 🤝 Contributing
+
+We welcome contributions from researchers and developers! 
+- **Bug Reports**: Open an issue if the parser misses specific GPT formatting patterns.
+- **New Templates**: Submit a PR with a new LaTeX template (e.g., Nature, Springer).
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
-
-## Alpha Build v1.0 (MVP)
-
-1. **`md2pdf` CLI**  
-   - `md2pdf input.md -o output.pdf --markdown-format gfm`  
-   - Offline, reproducible Pandoc → XeLaTeX pipeline  
-   - Custom vintage template + Lua filters for tables, multi-column layouts, fonts
-
-2. **FastAPI HTTP Service**  
-   - `POST /convert` accepts JSON `{ text, theme, markdown_format }` → returns PDF  
-   - Rate-limited (60 reqs/hr/IP) with built-in `/health` endpoint for smoke tests  
-   - Safe: strips dangerous LaTeX commands (e.g. `\input`, `\write18`)
-
-3. **Containerisation**  
-   - **Two-stage Docker build**  
-     - Stage 1: install TinyTeX (“small” scheme) + exactly the LaTeX packages you need  
-     - Stage 2: copy only the PDF runtime (TinyTeX + Pandoc + Python deps) → ~300 MB image  
-   - Makefile shortcuts: `make build`, `make dev`, `make demo`  
-
----
-
-## Tech Stack
-
-- **Core**: Python 3.11, FastAPI, Pydantic, asyncio  
-- **PDF Engine**: Pandoc 3.2 + XeLaTeX (TinyTeX “small” profile + Lua filters)  
-- **Rate-Limiting**: slowapi (Redis-free, in-process)  
-- **Container**: Docker (multi-stage build)  
-- **CI/CD**: GitHub Actions (build, test, smoke-test, push to registry)  
-- **Deployment**: Render.com / Fly.io / Railway (Docker)
-
----
-
-## Getting Started
-
-1. **Clone & configure**  
-   ```bash
-   git clone https://github.com/hsreedeth/GPT2PDF.git
-   cd GPT2PDF
+*Developed with ❤️ for the research community.*
