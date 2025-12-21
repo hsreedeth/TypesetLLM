@@ -86,11 +86,11 @@ The suite exercises both the CLI and API. Pandoc + XeLaTeX must be installed or 
 
 ## Samples (Generated)
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://i.postimg.cc/TwBdkT7T/Screenshot_2025_12_22_at_5_41_28_AM.png" />
+<img width=auto height=auto alt="GHBanner" src="https://i.postimg.cc/TwBdkT7T/Screenshot_2025_12_22_at_5_41_28_AM.png" />
 </div>
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://i.postimg.cc/V62f7zGJ/Screenshot_2025_12_22_at_5_40_15_AM.png" />
+<img width=auto height=auto alt="GHBanner" src="https://i.postimg.cc/V62f7zGJ/Screenshot_2025_12_22_at_5_40_15_AM.png" />
 </div>
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://i.postimg.cc/mkMbJKJF/Screenshot_2025_12_22_at_5_37_51_AM.png" />
+<img width=auto height=auto alt="GHBanner" src="https://i.postimg.cc/mkMbJKJF/Screenshot_2025_12_22_at_5_37_51_AM.png" />
 </div>
