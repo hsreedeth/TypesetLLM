@@ -14,7 +14,7 @@ This repo turns Markdown into publication-style PDFs with Pandoc + XeLaTeX. You 
 ## Prereqs (host)
 - Python 3.11
 - Pandoc ≥ 3.x on PATH
-- XeLaTeX toolchain (TinyTeX works; see `latexit/tlpkgs.txt` for the tested package set)
+- XeLaTeX toolchain (TinyTeX works. see `latexit/tlpkgs.txt` for the tested package set)
 - Fontconfig can see the bundled fonts (`assets/fonts/IBM_Plex_Serif_re`, `assets/fonts/Fira_Code`, `assets/fonts/Latin-Modern-Roman`)
 - Docker optional if you prefer everything pre-baked
 
