@@ -1,0 +1,35 @@
+# ----------  base  ----------
+FROM python:3.11-slim AS probe
+
+# ----------  system deps (include fontconfig) ----------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        wget \
+        ca-certificates \
+        make \
+        gcc \
+        perl \                  
+        libfontconfig1 \        
+    && rm -rf /var/lib/apt/lists/*
+
+# ----------  TinyTeX bare-bones ----------
+RUN curl -L https://yihui.org/tinytex/install-unx.sh | \
+        sh -s - --no-admin --scheme=small
+ENV PATH="/root/.TinyTeX/bin/*:${PATH}" 
+
+# use a fast CTAN mirror; install *nothing* yet
+RUN /root/.TinyTeX/bin/*/tlmgr option repository ctan
+
+# ----------  probe compile ----------
+COPY sample.md templates/vintage.tex /probe/
+RUN curl -L -o /usr/local/bin/pandoc \
+      https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-linux-amd64 \
+    && chmod +x /usr/local/bin/pandoc
+
+# ignore the return code so the build continues even if LaTeX errors
+RUN pandoc /probe/sample.md -o /probe/probe.pdf \
+      --template=/probe/vintage.tex --pdf-engine=xelatex || true
+
+# ----------  freeze the installed list ----------
+ RUN /root/.TinyTeX/bin/*/tlmgr list --only-installed --data name \
+    | sort > /probe/tlpkgs.txt
