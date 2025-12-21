@@ -9,7 +9,7 @@ This repo turns Markdown into publication-style PDFs with Pandoc + XeLaTeX. You 
 ## What’s here
 - `latexit/` — active code: `src/cli.py`, `src/api.py`, template, Lua filter, Dockerfiles, tests, samples, fonts.
 - `latexit copy/` — backup snapshot of the same tree.
-- Planning artifacts (`coreIdea.txt`, `conceptmap.txt`, `md2pdf.ipynb`, PDF exports) that show the early roadmap.
+- Planning artifacts (`coreIdea.txt`, `conceptmap.txt`, `md2pdf.ipynb`, PDF exports) that show the early roadmap (now removed, can be requested over email).
 
 ## Prereqs (host)
 - Python 3.11
@@ -71,7 +71,7 @@ docker run --rm -v "$PWD/samples":/data gptnotes-pdf \
 cd latexit
 python -m pytest -q
 ```
-The suite exercises both the CLI and API; Pandoc + XeLaTeX must be installed or the PDF assertions will fail.
+The suite exercises both the CLI and API. Pandoc + XeLaTeX must be installed or the PDF assertions will fail.
 
 ## Customisation
 - Drop new `.tex` templates into `templates/`; pass `-t` (CLI) or `theme=<name>` (API). Unknown themes fall back to `vintage.tex`.
