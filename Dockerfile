@@ -1,37 +1,70 @@
-# ---------- base image ----------
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim
 
-# ---------- build arguments ----------
-ARG TL_PACKAGES="fontspec microtype geometry xfp xcolor ragged2e booktabs \
-                 longtable unicode-math listings xkeyval pdflscape rotating"
+# — Build-time arguments —
+ARG TL_PACKAGES="\
+  amsmath amssymb babel-english booktabs caption colortbl enumitem \  
+  fancyhdr float fontspec framed geometry graphics hyperref listings \  
+  longtable microtype multirow pdflscape rotating setspace subcaption \  
+  tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval \  
+  collection-fontsrecommended collection-latexrecommended \  
+"
+ARG PANDOC_VERSION=3.2
 
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
 
-# ---------- system deps ----------
+# Install system & build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-       curl ca-certificates gdisk make gcc && \
-    rm -rf /var/lib/apt/lists/*
+      curl wget ca-certificates libfontconfig1 fontconfig perl xz-utils tar gzip make gcc \
+  && rm -rf /var/lib/apt/lists/*
 
-# ---------- pandoc ----------
-RUN curl -L -o /usr/local/bin/pandoc \
-      https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-linux-amd64 \
-    && chmod +x /usr/local/bin/pandoc
+# Install multi-arch Pandoc
+RUN set -eux; \
+    ARCH="$(dpkg --print-architecture)"; \
+    case "$ARCH" in \
+      amd64) P_ARCH=amd64 ;; \
+      arm64) P_ARCH=arm64 ;; \
+      *) echo "Unsupported arch $ARCH"; exit 1 ;; \
+    esac; \
+    curl -fsSL -o /tmp/pandoc.tar.gz \
+      "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-${P_ARCH}.tar.gz"; \
+    tar -C /usr/local -xzf /tmp/pandoc.tar.gz --strip-components=1; \
+    rm /tmp/pandoc.tar.gz
 
-# ---------- tinytex (minimal) ----------
-RUN curl -L https://yihui.org/tinytex/install-unx.sh | sh -s - --no-admin --scheme=small \
-    && /root/.TinyTeX/bin/*/tlmgr install $TL_PACKAGES \
-    && /root/.TinyTeX/bin/*/tlmgr path add
+# Bootstrap TinyTeX & install curated LaTeX packages
+RUN set -eux; \
+    curl -fsSL https://yihui.org/tinytex/install-unx.sh | \
+      sh -s - --no-admin --scheme=small; \
+    /root/.TinyTeX/bin/*/tlmgr option repository https://mirror.ctan.org/systems/texlive/tlnet; \
+    /root/.TinyTeX/bin/*/tlmgr update --self --no-auto-install; \
+    for pkg in ${TL_PACKAGES}; do \
+      /root/.TinyTeX/bin/*/tlmgr install "$pkg" || echo "⚠️  $pkg missing — continuing"; \
+    done; \
+    # Symlink TeX binaries (excluding tlmgr) into /usr/local/bin
+    TEXDIR="$(ls -d /root/.TinyTeX/bin/* | head -n1)"; \
+    for f in "$TEXDIR"/*; do \
+      base="$(basename "$f")"; \
+      [ "$base" = "tlmgr" ] && continue; \
+      ln -s "$f" /usr/local/bin/"$base"; \
+    done
 
-ENV PATH="/root/.TinyTeX/bin/universal-darwin:${PATH}"
+# Python dependencies 
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ---------- python deps ----------
-COPY pyproject.toml poetry.lock ./
-RUN pip install --no-cache-dir poetry && poetry install --no-dev --no-root
-
-# ---------- app code ----------
+# Application code & assets
 COPY src ./src
 COPY templates ./templates
 COPY filters ./filters
 COPY assets ./assets
-CMD ["uvicorn", "src.web:app", "--host", "0.0.0.0", "--port", "8000"]
+
+RUN mkdir -p /usr/local/share/fonts/opentype \
+  && echo "Copying bundled font files to system..." \
+  && find /app/assets/fonts/ -type f \( -iname "*.otf" -o -iname "*.ttf" \) -print -exec cp {} /usr/local/share/fonts/opentype/ \; \
+  && echo "Updating font cache..." \
+  && fc-cache -fv
+
+
+# — Expose & Run —
+EXPOSE 8000
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
