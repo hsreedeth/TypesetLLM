@@ -74,9 +74,9 @@ python -m pytest -q
 The suite exercises both the CLI and API. Pandoc + XeLaTeX must be installed or the PDF assertions will fail.
 
 ## Customisation
-- Drop new `.tex` templates into `templates/`; pass `-t` (CLI) or `theme=<name>` (API). Unknown themes fall back to `vintage.tex`.
+- Drop new `.tex` templates into `templates/`. pass `-t` (CLI) or `theme=<name>` (API). Unknown themes fall back to `vintage.tex`.
 - Edit `filters/landscape-6col.lua` if you want different table widths or to disable the landscape flip.
-- `quickscripts/` holds small demo commands; `samples/` contains real Markdown fixtures to tweak.
+- `quickscripts/` holds small demo commands. `samples/` contains real Markdown fixtures to tweak.
 - `Dockerfile.probe` plus `tlpkgs.txt` capture the minimal TeX packages that successfully compile the template.
 
 ## Notes
