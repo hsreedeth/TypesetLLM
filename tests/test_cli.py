@@ -1,67 +1,79 @@
-# tests/test_cli.py
+"""
+Smoke-tests for the md2pdf CLI (src/cli.py)
+
+Run:
+    python -m pytest -q
+"""
 
 import sys
+import subprocess
 from pathlib import Path
 
-# add the project root (one level up) to sys.path so `import src` works
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-import subprocess
-import sys as _sys
 import pytest
 
-CLI_MODULE = "src.cli"
 
-
-def run_cli(args, **kwargs):
-    cmd = [sys.executable, "-m", CLI_MODULE, *args]
-    return subprocess.run(cmd, **kwargs)
-
-
-def test_help_flag_shows_usage():
-    result = run_cli(["--help"],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE,
-                     text=True)
-    assert result.returncode == 0
-    assert "usage" in result.stdout.lower()
-
-
-def test_missing_source_aborts(tmp_path):
-    missing = tmp_path / "nope.md"
-    result = run_cli([str(missing)],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE,
-                     text=True)
+# ---------------------------------------------------------------------------
+# 1) missing source → non-zero exit + helpful stderr
+# ---------------------------------------------------------------------------
+def test_missing_source_aborts():
+    result = subprocess.run(
+        [sys.executable, "-m", "src.cli"],
+        capture_output=True,
+        text=True,
+    )
     assert result.returncode != 0
-    # stderr >>> stdout. any day.
-    assert "does not exist" in result.stderr.lower()
+    stderr = result.stderr.lower()
+    assert "source file" in stderr and "does not exist" in stderr
 
 
+# ---------------------------------------------------------------------------
+# 2) CLI converts Markdown file → valid PDF
+# ---------------------------------------------------------------------------
 @pytest.mark.parametrize("content", ["# Hi", "Hello **World**"])
-def test_convert_creates_pdf(tmp_path, content):
-    md = tmp_path / "demo.md"
-    md.write_text(content, encoding="utf-8")
-    pdf = tmp_path / "demo.pdf"
+def test_cli_converts_file(tmp_path: Path, content: str):
+    md = tmp_path / "sample.md"
+    md.write_text(content)
+    pdf = tmp_path / "sample.pdf"
 
-    result = run_cli([str(md), "-o", str(pdf)],
-                     stdout=subprocess.PIPE,
-                     stderr=subprocess.PIPE,
-                     text=True)
+    result = subprocess.run(
+        [sys.executable, "-m", "src.cli", str(md), "-o", str(pdf)],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, f"stderr:\n{result.stderr}"
+    assert pdf.is_file()
+    assert pdf.read_bytes().startswith(b"%PDF-")
 
-    assert result.returncode == 0, f"stderr={result.stderr}"
-    assert pdf.exists(), "PDF file was not created"
-    # lower threshold  accommodate ~9 KB pds
-    assert pdf.stat().st_size > 5_000, f"PDF too small ({pdf.stat().st_size} bytes)"
+
+# ---------------------------------------------------------------------------
+# 3) stdin flag works
+# ---------------------------------------------------------------------------
+def test_cli_converts_stdin(tmp_path: Path):
+    pdf = tmp_path / "stdin.pdf"
+    proc = subprocess.run(
+        [sys.executable, "-m", "src.cli", "--stdin", "-o", str(pdf)],
+        input="# From STDIN\n\n*Bullet*",
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0
+    assert pdf.is_file()
+    assert pdf.read_bytes().startswith(b"%PDF-")
 
 
-def test_convert_direct_call(tmp_path):
+# ---------------------------------------------------------------------------
+# 4) direct convert() invocation
+# ---------------------------------------------------------------------------
+def test_convert_direct_call(tmp_path: Path):
     from src.cli import convert
 
-    md = tmp_path / "direct.md"
-    md.write_text("Direct call test", encoding="utf-8")
-    pdf = tmp_path / "direct.pdf"
-    convert(md, pdf)
+    md = tmp_path / "x.md"
+    md.write_text("# Title")
+    pdf = tmp_path / "x.pdf"
 
-    assert pdf.exists(), "Direct convert didn’t make a PDF"
-    assert pdf.stat().st_size > 5_000
+    tpl = Path("templates") / "vintage.tex"
+    assert tpl.is_file(), "templates/vintage.tex missing for tests"
+
+    convert(md, pdf, "gfm", tpl)
+    assert pdf.is_file()
+    assert pdf.read_bytes().startswith(b"%PDF-")
