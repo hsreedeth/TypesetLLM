@@ -7,14 +7,14 @@
 This repo turns Markdown into publication-style PDFs with Pandoc + XeLaTeX. You get a small CLI for quick renders and a FastAPI endpoint for programmatic jobs. Fonts, a template, and a Lua filter ship with the tree so the output looks consistent without hunting for assets.
 
 ## What’s here
-- `latexit/` — active code: `src/cli.py`, `src/api.py`, template, Lua filter, Dockerfiles, tests, samples, fonts.
+- `latexit/`[Note: latexit was the local repo name I used] — active code: `src/cli.py`, `src/api.py`, template, Lua filter, Dockerfiles, tests, samples, fonts.
 - `latexit copy/` — backup snapshot of the same tree.
 - Planning artifacts (`coreIdea.txt`, `conceptmap.txt`, `md2pdf.ipynb`, PDF exports) that show the early roadmap (now removed, can be requested over email).
 
 ## Prereqs (host)
 - Python 3.11
 - Pandoc ≥ 3.x on PATH
-- XeLaTeX toolchain (TinyTeX works. see `latexit/tlpkgs.txt` for the tested package set) [Note: latexit was the local repo name I used]
+- XeLaTeX toolchain (TinyTeX works. see `latexit/tlpkgs.txt` for the tested package set)
 - Fontconfig can see the bundled fonts (`assets/fonts/IBM_Plex_Serif_re`, `assets/fonts/Fira_Code`, `assets/fonts/Latin-Modern-Roman`)
 - Docker optional if you prefer everything pre-baked
 
