@@ -7,15 +7,15 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient, ASGITransport
 
-# Ensure project root is on sys.path
+# make sure project root is on sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.api import app, MAX_SIZE
 
 
-# --------------------------------------------------------------------
-# 1) client fixture as a normal (synchronous) factory
-# --------------------------------------------------------------------
+
+# 1. client fixture as a normal (synchronous) factory
+
 @pytest.fixture
 def client() -> AsyncClient:
     """
@@ -26,7 +26,7 @@ def client() -> AsyncClient:
     return AsyncClient(transport=transport, base_url="http://test")
 
 
-# --------------------------------------------------------------------
+# -------------------------------------------------------------------- ##
 @pytest.mark.asyncio
 async def test_convert_form_success(client: AsyncClient):
     """
@@ -48,7 +48,7 @@ async def test_convert_form_success(client: AsyncClient):
     assert resp.content.startswith(b"%PDF-")
 
 
-# --------------------------------------------------------------------
+# -------------------------------------------------------------------- #
 @pytest.mark.asyncio
 async def test_convert_json_success(client: AsyncClient):
     """
@@ -67,7 +67,7 @@ async def test_convert_json_success(client: AsyncClient):
     assert resp.content.startswith(b"%PDF-")
 
 
-# --------------------------------------------------------------------
+# -------------------------------------------------------------------- #
 @pytest.mark.asyncio
 async def test_payload_too_large(client: AsyncClient):
     """
@@ -96,7 +96,7 @@ async def test_payload_too_large(client: AsyncClient):
         assert "too large" in combined
 
 
-# --------------------------------------------------------------------
+## -------------------------------------------------------------------- ##
 @pytest.mark.asyncio
 async def test_latex_injection_sanitised(client: AsyncClient):
     """
@@ -119,7 +119,7 @@ async def test_latex_injection_sanitised(client: AsyncClient):
     assert resp.content.startswith(b"%PDF-")
 
 
-# --------------------------------------------------------------------
+# -------------------------------------------------------------------- #
 @pytest.mark.asyncio
 async def test_missing_markdown_field(client: AsyncClient):
     """
