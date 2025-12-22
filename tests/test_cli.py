@@ -1,5 +1,5 @@
 """
-Smoke-tests for the md2pdf CLI (src/cli.py)
+Smoke-tests for md2pdf CLI stack (src/cli.py)
 
 Run:
     python -m pytest -q
@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 
 
-# ---------------------------------------------------------------------------
-# 1) missing source → non-zero exit + helpful stderr
-# ---------------------------------------------------------------------------
+
+# 1 if missing source go to non-zero exit + helpful stderr
+
 def test_missing_source_aborts():
     result = subprocess.run(
         [sys.executable, "-m", "src.cli"],
@@ -26,9 +26,9 @@ def test_missing_source_aborts():
     assert "source file" in stderr and "does not exist" in stderr
 
 
-# ---------------------------------------------------------------------------
-# 2) CLI converts Markdown file → valid PDF
-# ---------------------------------------------------------------------------
+
+# 2 CLI converts Markdown file to valid PDF
+
 @pytest.mark.parametrize("content", ["# Hi", "Hello **World**"])
 def test_cli_converts_file(tmp_path: Path, content: str):
     md = tmp_path / "sample.md"
@@ -45,9 +45,9 @@ def test_cli_converts_file(tmp_path: Path, content: str):
     assert pdf.read_bytes().startswith(b"%PDF-")
 
 
-# ---------------------------------------------------------------------------
-# 3) stdin flag works
-# ---------------------------------------------------------------------------
+
+# 3 stdin flag works
+
 def test_cli_converts_stdin(tmp_path: Path):
     pdf = tmp_path / "stdin.pdf"
     proc = subprocess.run(
@@ -61,9 +61,9 @@ def test_cli_converts_stdin(tmp_path: Path):
     assert pdf.read_bytes().startswith(b"%PDF-")
 
 
-# ---------------------------------------------------------------------------
+
 # 4) direct convert() invocation
-# ---------------------------------------------------------------------------
+
 def test_convert_direct_call(tmp_path: Path):
     from src.cli import convert
 
