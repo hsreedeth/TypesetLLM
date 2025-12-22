@@ -8,7 +8,6 @@ This repo turns Markdown into publication-style PDFs with Pandoc + XeLaTeX. You 
 
 ## What’s here
 - `latexit/`[Note: latexit was the local repo name I used] — active code: `src/cli.py`, `src/api.py`, template, Lua filter, Dockerfiles, tests, samples, fonts.
-- `latexit copy/` — backup snapshot of the same tree.
 - Planning artifacts (`coreIdea.txt`, `conceptmap.txt`, `md2pdf.ipynb`, PDF exports) that show the early roadmap (now removed, can be requested over email).
 
 ## Prereqs (host)
