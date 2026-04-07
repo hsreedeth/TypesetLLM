@@ -14,31 +14,48 @@ import logging
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Tuple, Annotated
+from typing import Any, Callable, Final, Tuple
 
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, status, Depends
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse, JSONResponse
-from slowapi import Limiter
-from slowapi.errors import RateLimitExceeded
-from slowapi.middleware import SlowAPIMiddleware
-from slowapi.util import get_remote_address
-from starlette.datastructures import UploadFile
+
+try:
+    from slowapi import Limiter
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.middleware import SlowAPIMiddleware
+    from slowapi.util import get_remote_address
+except ModuleNotFoundError:  # pragma: no cover - depends on local environment
+    Limiter = None
+    RateLimitExceeded = None
+    SlowAPIMiddleware = None
+    get_remote_address = None
 
 # logging.basicConfig(level=logging.INFO)  # enable locally if you're chasing request flow
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Markdown → PDF API", version="0.5.1")
 
-# simple rate limit so someone can't spam LaTeX and pin the CPU
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/hour"])
-app.state.limiter = limiter
-app.add_middleware(SlowAPIMiddleware)
+def _no_limit(func: Callable[..., Any]) -> Callable[..., Any]:
+    return func
 
 
-@app.exception_handler(RateLimitExceeded)
-async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):  # noqa: D401
-    # slowapi raises its own exception; we just return something consistent
-    return JSONResponse({"detail": "Rate limit exceeded"}, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
+if Limiter is not None and get_remote_address is not None and SlowAPIMiddleware is not None:
+    # simple rate limit so someone can't spam LaTeX and pin the CPU
+    limiter = Limiter(key_func=get_remote_address, default_limits=["60/hour"])
+    app.state.limiter = limiter
+    app.add_middleware(SlowAPIMiddleware)
+    convert_limit = limiter.limit("60/hour")
+else:  # pragma: no cover - depends on local environment
+    limiter = None
+    app.state.limiter = None
+    convert_limit = _no_limit
+
+
+if RateLimitExceeded is not None:
+    @app.exception_handler(RateLimitExceeded)
+    async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):  # noqa: D401
+        # slowapi raises its own exception; we just return something consistent
+        return JSONResponse({"detail": "Rate limit exceeded"}, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
 
 
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
@@ -111,8 +128,8 @@ async def health() -> dict[str, str]:  # noqa: D401
 
 
 @app.post("/convert", response_class=FileResponse, tags=["conversion"])
-@limiter.limit("60/hour")
-async def convert_endpoint(request: Request, background_tasks: Annotated[BackgroundTasks, Depends()]):  # noqa: D401
+@convert_limit
+async def convert_endpoint(request: Request, background_tasks: BackgroundTasks):  # noqa: D401
     # loud on purpose while this service is still settling down
     logger.critical("CRITICAL_LOG: convert_endpoint has been entered!")
     markdown_text, theme = await _extract_payload(request)
