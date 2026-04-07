@@ -73,7 +73,8 @@ async def test_large_payload_success(client: AsyncClient):
     """
     Large markdown bodies should still be converted.
     """
-    long_text = "# Big\n\n" + ("a" * 20_000)
+    paragraph = "This is a large markdown document with enough spaces to wrap correctly. " * 40
+    long_text = "# Big\n\n" + "\n\n".join(paragraph for _ in range(80))
     resp = await client.post(
         "/convert",
         data={

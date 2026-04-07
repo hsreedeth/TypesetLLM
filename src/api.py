@@ -30,9 +30,6 @@ except ModuleNotFoundError:  # pragma: no cover - depends on local environment
     SlowAPIMiddleware = None
     get_remote_address = None
 
-# logging.basicConfig(level=logging.INFO)  # enable locally if you're chasing request flow
-logger = logging.getLogger(__name__)
-
 app = FastAPI(title="Markdown → PDF API", version="0.5.1")
 
 def _no_limit(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -130,8 +127,6 @@ async def health() -> dict[str, str]:  # noqa: D401
 @app.post("/convert", response_class=FileResponse, tags=["conversion"])
 @convert_limit
 async def convert_endpoint(request: Request, background_tasks: BackgroundTasks):  # noqa: D401
-    # loud on purpose while this service is still settling down
-    logger.critical("CRITICAL_LOG: convert_endpoint has been entered!")
     markdown_text, theme = await _extract_payload(request)
 
     md_clean = _sanitize(markdown_text)
