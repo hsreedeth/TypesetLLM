@@ -1,6 +1,6 @@
 # TypesetLLM*
 
-Render Markdown to PDF with Pandoc + XeLaTeX. (For MacOS & Linus)
+Render Markdown to PDF with Pandoc + XeLaTeX. *(For MacOS & Linus)
 
 ## Setup
 
@@ -8,7 +8,6 @@ Requires `pandoc` and `xelatex`.
 Note: Deactivate any active conda environments before starting up.
 
 ```bash
-conda deactivate
 python -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt
