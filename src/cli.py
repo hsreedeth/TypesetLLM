@@ -26,8 +26,10 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from typing import Final
 
 import pypandoc
@@ -36,6 +38,13 @@ import pypandoc
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
 DEFAULT_TEMPLATE: Final[Path] = BASE_DIR / "templates" / "vintage.tex"
 LUA_FILTER: Final[Path] = BASE_DIR / "filters" / "landscape-6col.lua"
+FONTS_DIR: Final[Path] = BASE_DIR / "fonts"
+DEFAULT_MARKDOWN_FORMAT: Final[str] = (
+    "markdown+yaml_metadata_block+tex_math_dollars+fenced_divs+bracketed_spans"
+    "+fenced_code_attributes+pipe_tables+grid_tables+multiline_tables+simple_tables"
+    "+table_captions+implicit_figures+link_attributes+task_lists+strikeout+footnotes"
+    "+raw_tex+smart"
+)
 
 
 def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> None:  # noqa: D401 – keep signature untouched
@@ -56,18 +65,30 @@ def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> 
     if not LUA_FILTER.is_file():
         raise FileNotFoundError(f"lua filter does not exist: {LUA_FILTER}")
 
+    if not FONTS_DIR.is_dir():
+        raise FileNotFoundError(f"fonts directory does not exist: {FONTS_DIR}")
+
     # make sure out dir exists (pandoc won't do it for you)
     dst.parent.mkdir(parents=True, exist_ok=True)
+
+    resource_paths = [src.parent.resolve(), Path.cwd().resolve(), BASE_DIR.resolve()]
+    resource_path_arg = os.pathsep.join(dict.fromkeys(str(path) for path in resource_paths))
 
     # pandoc knobs. keep these boring + explicit so diffs are easy to read later.
     extra_args = [
         f"--template={template_path}",
         "--pdf-engine=xelatex",
+        "--pdf-engine-opt=-interaction=nonstopmode",
         "--lua-filter",
         str(LUA_FILTER),
-        "-f",
-        f"{markdown_format}-yaml_metadata_block",
+        "--resource-path",
+        resource_path_arg,
+        "-V",
+        f"fontdir={FONTS_DIR.resolve().as_posix()}/",
     ]
+
+    if markdown_format and markdown_format.lower() != "auto":
+        extra_args.extend(["-f", markdown_format])
 
     logging.debug("pandoc extra_args=%s", extra_args)
 
@@ -115,9 +136,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--markdown-format",
-        choices=["gfm", "commonmark_x"],
-        default="gfm",
-        help="Markdown flavour to expect in the input.",
+        default=DEFAULT_MARKDOWN_FORMAT,
+        help="Pandoc input format string. Use 'auto' to let pandoc detect it.",
     )
     parser.add_argument(
         "-t",
@@ -148,10 +168,10 @@ def main(argv: list[str] | None = None) -> None:  # noqa: D401 – CLI entry-poi
             print("Empty input on STDIN", file=sys.stderr)
             sys.exit(1)
 
-        # use a stable-ish temp name; ok for local usage + CI. (not great for concurrency.)
-        tmp_src = Path("stdin.md").resolve()
-        tmp_src.write_text(stdin_markdown, encoding="utf-8")
-        src_path = tmp_src
+        tmp_src = NamedTemporaryFile(delete=False, suffix=".md", mode="w", encoding="utf-8")
+        tmp_src.write(stdin_markdown)
+        tmp_src.close()
+        src_path = Path(tmp_src.name)
         cleanup_tmp_src = True
     else:
         if args.source is None:

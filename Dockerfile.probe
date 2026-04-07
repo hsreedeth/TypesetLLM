@@ -22,13 +22,15 @@ RUN /root/.TinyTeX/bin/*/tlmgr option repository ctan
 
 # ----------  probe compile ----------
 COPY sample.md templates/vintage.tex /probe/
+COPY fonts /probe/fonts
 RUN curl -L -o /usr/local/bin/pandoc \
       https://github.com/jgm/pandoc/releases/download/3.2/pandoc-3.2-linux-amd64 \
     && chmod +x /usr/local/bin/pandoc
 
 # ignore the return code so the build continues even if LaTeX errors
 RUN pandoc /probe/sample.md -o /probe/probe.pdf \
-      --template=/probe/vintage.tex --pdf-engine=xelatex || true
+      --template=/probe/vintage.tex --pdf-engine=xelatex \
+      -V fontdir=/probe/fonts/ || true
 
 # ----------  freeze the installed list ----------
  RUN /root/.TinyTeX/bin/*/tlmgr list --only-installed --data name \

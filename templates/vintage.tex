@@ -3,9 +3,35 @@
 
 % -------------------- Fonts --------------------
 \usepackage{fontspec}
-\setmainfont{IBM Plex Serif}
-\setsansfont{Fira Code}
-\setmonofont{Fira Code}
+$if(fontdir)$
+\setmainfont{IBMPlexSerif-Regular.ttf}[
+  Path={$fontdir$},
+  BoldFont=IBMPlexSerif-Bold.ttf,
+  ItalicFont=IBMPlexSerif-Italic.ttf,
+  BoldItalicFont=IBMPlexSerif-BoldItalic.ttf,
+  Ligatures=TeX
+]
+\setsansfont{FiraCode-Regular.ttf}[
+  Path={$fontdir$},
+  BoldFont=FiraCode-Bold.ttf,
+  ItalicFont=FiraCode-Regular.ttf,
+  BoldItalicFont=FiraCode-Bold.ttf,
+  Scale=MatchLowercase
+]
+\setmonofont{FiraCode-Regular.ttf}[
+  Path={$fontdir$},
+  BoldFont=FiraCode-Bold.ttf,
+  ItalicFont=FiraCode-Regular.ttf,
+  BoldItalicFont=FiraCode-Bold.ttf,
+  Scale=MatchLowercase
+]
+$else$
+\IfFontExistsTF{IBM Plex Serif}{\setmainfont{IBM Plex Serif}}{\setmainfont{Latin Modern Roman}}
+\IfFontExistsTF{Fira Code}{\setsansfont{Fira Code}\setmonofont{Fira Code}}{
+  \setsansfont{Latin Modern Sans}
+  \setmonofont{Latin Modern Mono}
+}
+$endif$
 
 % -------------------- Header / footer ----------
 \usepackage{fancyhdr}

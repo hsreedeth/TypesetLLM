@@ -44,7 +44,6 @@ async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):  # noqa
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR: Final[Path] = BASE_DIR / "templates"
 DEFAULT_TEMPLATE: Final[Path] = TEMPLATES_DIR / "vintage.tex"
-MAX_SIZE: Final[int] = 10_000  # bytes; keep requests small so compilation stays predictable
 
 # guardrails: LaTeX can read/write files and spawn commands depending on config.
 # this is not a sandbox, it's just removing the obvious foot-guns.
@@ -118,11 +117,6 @@ async def convert_endpoint(request: Request, background_tasks: Annotated[Backgro
     logger.critical("CRITICAL_LOG: convert_endpoint has been entered!")
     markdown_text, theme = await _extract_payload(request)
 
-    # quick cap: people will try to post huge blobs, and TeX will happily suffer
-    size_bytes = len(markdown_text.encode())
-    if size_bytes > MAX_SIZE:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Markdown too large (max 10 kB).")
-
     md_clean = _sanitize(markdown_text)
 
     # theme is a template name, not user-controlled filesystem access
@@ -148,11 +142,11 @@ async def convert_endpoint(request: Request, background_tasks: Annotated[Backgro
     pdf_path = Path(pdf_tmp.name)
 
     # imports here so the module loads fast and errors are localized to conversion
-    from src.cli import convert as _convert_md_to_pdf
+    from src.cli import DEFAULT_MARKDOWN_FORMAT, convert as _convert_md_to_pdf
 
     try:
         # run the blocking conversion off the event loop
-        await asyncio.to_thread(_convert_md_to_pdf, md_path, pdf_path, "gfm", tpl_path)
+        await asyncio.to_thread(_convert_md_to_pdf, md_path, pdf_path, DEFAULT_MARKDOWN_FORMAT, tpl_path)
 
         # cheap sanity check; empty output usually means a LaTeX/pandoc failure upstream
         if pdf_path.stat().st_size == 0:

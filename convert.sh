@@ -1,32 +1,37 @@
 #!/bin/bash
 
-# --- Simple Markdown to PDF Converter ---
+set -euo pipefail
 
-# 1. Check if an input file was provided
-if [ -z "$1" ]; then
-  echo "Error: No input .md file supplied."
-  echo "Usage: ./convert.sh <path/to/file.md>"
+if [ $# -lt 1 ]; then
+  echo "Usage: ./convert.sh <path/to/file.md> [output.pdf]"
   exit 1
 fi
 
-# 2. Define file paths
-INPUT_FILE="$1"
-OUTPUT_DIR="out"
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname "$0")" && pwd)"
+INPUT_FILE="$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+OUTPUT_FILE="${2:-${INPUT_FILE%.*}.pdf}"
 
-# Get just the filename (e.g., "MAIP_protocol.md")
-FILENAME=$(basename "$INPUT_FILE")
+pick_python() {
+  for candidate in \
+    "${SCRIPT_DIR}/.venv/bin/python" \
+    "$(command -v python3 2>/dev/null || true)" \
+    "$(command -v python 2>/dev/null || true)"
+  do
+    if [ -n "${candidate}" ] && [ -x "${candidate}" ] && "${candidate}" -c "import pypandoc" >/dev/null 2>&1; then
+      echo "${candidate}"
+      return 0
+    fi
+  done
 
-# Get the filename without the .md extension (e.g., "MAIP_protocol")
-FILENAME_NO_EXT="${FILENAME%.md}"
+  return 1
+}
 
-# Create the final output path
-OUTPUT_FILE="${OUTPUT_DIR}/${FILENAME_NO_EXT}.pdf"
+if ! PYTHON_BIN="$(pick_python)"; then
+  echo "Could not find a Python interpreter with pypandoc installed."
+  exit 1
+fi
 
-# 3. Create the output directory if it doesn't exist
-mkdir -p "$OUTPUT_DIR"
+cd "${SCRIPT_DIR}"
+"${PYTHON_BIN}" -m src.cli "${INPUT_FILE}" -o "${OUTPUT_FILE}"
 
-# 4. Run the conversion command
-echo "Converting ${INPUT_FILE}..."
-python -m src.cli "$INPUT_FILE" -o "$OUTPUT_FILE"
-
-echo "✅ Done. Output saved to ${OUTPUT_FILE}"
+echo "Saved ${OUTPUT_FILE}"

@@ -10,7 +10,7 @@ from httpx import AsyncClient, ASGITransport
 # make sure project root is on sys.path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.api import app, MAX_SIZE
+from src.api import app
 
 
 
@@ -69,11 +69,11 @@ async def test_convert_json_success(client: AsyncClient):
 
 # -------------------------------------------------------------------- #
 @pytest.mark.asyncio
-async def test_payload_too_large(client: AsyncClient):
+async def test_large_payload_success(client: AsyncClient):
     """
-    One byte over MAX_SIZE (10,000) should be rejected with 422 + 'too large'.
+    Large markdown bodies should still be converted.
     """
-    long_text = "a" * (MAX_SIZE + 1)
+    long_text = "# Big\n\n" + ("a" * 20_000)
     resp = await client.post(
         "/convert",
         data={
@@ -81,19 +81,12 @@ async def test_payload_too_large(client: AsyncClient):
             "theme": "vintage",
         },
     )
-    if resp.status_code != status.HTTP_422_UNPROCESSABLE_ENTITY:
+    if resp.status_code != status.HTTP_200_OK:
         print("➡️  DEBUG status:", resp.status_code)
         print("➡️  DEBUG body:", resp.text)
-    assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    detail = resp.json().get("detail")
-    # detail might be a string (our custom HTTPException) or a list (default validation)
-    if isinstance(detail, str):
-        assert "too large" in detail.lower()
-    else:
-        # Join all error messages and check
-        combined = " ".join(map(str, detail)).lower()
-        assert "too large" in combined
+    assert resp.status_code == status.HTTP_200_OK
+    assert resp.headers["content-type"].startswith("application/pdf")
+    assert resp.content.startswith(b"%PDF-")
 
 
 ## -------------------------------------------------------------------- ##

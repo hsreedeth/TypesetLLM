@@ -52,17 +52,11 @@ RUN set -eux; \
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Application code & assets
+# Application code & bundled assets
 COPY src ./src
 COPY templates ./templates
 COPY filters ./filters
-COPY assets ./assets
-
-RUN mkdir -p /usr/local/share/fonts/opentype \
-  && echo "Copying bundled font files to system..." \
-  && find /app/assets/fonts/ -type f \( -iname "*.otf" -o -iname "*.ttf" \) -print -exec cp {} /usr/local/share/fonts/opentype/ \; \
-  && echo "Updating font cache..." \
-  && fc-cache -fv
+COPY fonts ./fonts
 
 
 # — Expose & Run —
