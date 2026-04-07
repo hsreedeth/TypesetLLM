@@ -1,6 +1,6 @@
-# TypesetLLM
+# TypesetLLM*
 
-Render Markdown to PDF with Pandoc + XeLaTeX.
+Render Markdown to PDF with Pandoc + XeLaTeX. (For MacOS & Linus)
 
 ## Setup
 
