@@ -25,13 +25,73 @@ $if(fontdir)$
   BoldItalicFont=FiraCode-Bold.ttf,
   Scale=MatchLowercase
 ]
+\newfontfamily\greekfallbackfont{FiraCode-Regular.ttf}[
+  Path={$fontdir$},
+  BoldFont=FiraCode-Bold.ttf,
+  ItalicFont=FiraCode-Regular.ttf,
+  BoldItalicFont=FiraCode-Bold.ttf,
+  Scale=MatchLowercase
+]
 $else$
 \IfFontExistsTF{IBM Plex Serif}{\setmainfont{IBM Plex Serif}}{\setmainfont{Latin Modern Roman}}
 \IfFontExistsTF{Fira Code}{\setsansfont{Fira Code}\setmonofont{Fira Code}}{
   \setsansfont{Latin Modern Sans}
   \setmonofont{Latin Modern Mono}
 }
+\IfFontExistsTF{Fira Code}{\newfontfamily\greekfallbackfont{Fira Code}}{
+  \newfontfamily\greekfallbackfont{Latin Modern Roman}
+}
 $endif$
+\newcommand{\greekchar}[1]{{\greekfallbackfont\char"#1}}
+\catcode`Α=\active \protected\def Α{\greekchar{0391}}
+\catcode`Β=\active \protected\def Β{\greekchar{0392}}
+\catcode`Γ=\active \protected\def Γ{\greekchar{0393}}
+\catcode`Δ=\active \protected\def Δ{\greekchar{0394}}
+\catcode`Ε=\active \protected\def Ε{\greekchar{0395}}
+\catcode`Ζ=\active \protected\def Ζ{\greekchar{0396}}
+\catcode`Η=\active \protected\def Η{\greekchar{0397}}
+\catcode`Θ=\active \protected\def Θ{\greekchar{0398}}
+\catcode`Ι=\active \protected\def Ι{\greekchar{0399}}
+\catcode`Κ=\active \protected\def Κ{\greekchar{039A}}
+\catcode`Λ=\active \protected\def Λ{\greekchar{039B}}
+\catcode`Μ=\active \protected\def Μ{\greekchar{039C}}
+\catcode`Ν=\active \protected\def Ν{\greekchar{039D}}
+\catcode`Ξ=\active \protected\def Ξ{\greekchar{039E}}
+\catcode`Ο=\active \protected\def Ο{\greekchar{039F}}
+\catcode`Π=\active \protected\def Π{\greekchar{03A0}}
+\catcode`Ρ=\active \protected\def Ρ{\greekchar{03A1}}
+\catcode`Σ=\active \protected\def Σ{\greekchar{03A3}}
+\catcode`Τ=\active \protected\def Τ{\greekchar{03A4}}
+\catcode`Υ=\active \protected\def Υ{\greekchar{03A5}}
+\catcode`Φ=\active \protected\def Φ{\greekchar{03A6}}
+\catcode`Χ=\active \protected\def Χ{\greekchar{03A7}}
+\catcode`Ψ=\active \protected\def Ψ{\greekchar{03A8}}
+\catcode`Ω=\active \protected\def Ω{\greekchar{03A9}}
+\catcode`α=\active \protected\def α{\greekchar{03B1}}
+\catcode`β=\active \protected\def β{\greekchar{03B2}}
+\catcode`γ=\active \protected\def γ{\greekchar{03B3}}
+\catcode`δ=\active \protected\def δ{\greekchar{03B4}}
+\catcode`ε=\active \protected\def ε{\greekchar{03B5}}
+\catcode`ζ=\active \protected\def ζ{\greekchar{03B6}}
+\catcode`η=\active \protected\def η{\greekchar{03B7}}
+\catcode`θ=\active \protected\def θ{\greekchar{03B8}}
+\catcode`ι=\active \protected\def ι{\greekchar{03B9}}
+\catcode`κ=\active \protected\def κ{\greekchar{03BA}}
+\catcode`λ=\active \protected\def λ{\greekchar{03BB}}
+\catcode`μ=\active \protected\def μ{\greekchar{03BC}}
+\catcode`ν=\active \protected\def ν{\greekchar{03BD}}
+\catcode`ξ=\active \protected\def ξ{\greekchar{03BE}}
+\catcode`ο=\active \protected\def ο{\greekchar{03BF}}
+\catcode`π=\active \protected\def π{\greekchar{03C0}}
+\catcode`ρ=\active \protected\def ρ{\greekchar{03C1}}
+\catcode`ς=\active \protected\def ς{\greekchar{03C2}}
+\catcode`σ=\active \protected\def σ{\greekchar{03C3}}
+\catcode`τ=\active \protected\def τ{\greekchar{03C4}}
+\catcode`υ=\active \protected\def υ{\greekchar{03C5}}
+\catcode`φ=\active \protected\def φ{\greekchar{03C6}}
+\catcode`χ=\active \protected\def χ{\greekchar{03C7}}
+\catcode`ψ=\active \protected\def ψ{\greekchar{03C8}}
+\catcode`ω=\active \protected\def ω{\greekchar{03C9}}
 
 % -------------------- Header / footer ----------
 \usepackage{fancyhdr}
