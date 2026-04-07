@@ -28,6 +28,15 @@ def client() -> AsyncClient:
 
 # -------------------------------------------------------------------- ##
 @pytest.mark.asyncio
+async def test_index_page_served(client: AsyncClient):
+    resp = await client.get("/")
+    assert resp.status_code == status.HTTP_200_OK
+    assert "markdown renderer" in resp.text.lower()
+    assert "convert to pdf" in resp.text.lower()
+
+
+# -------------------------------------------------------------------- ##
+@pytest.mark.asyncio
 async def test_convert_form_success(client: AsyncClient):
     """
     Sending form-encoded `markdown_text` + `theme` should return 200 + application/pdf.

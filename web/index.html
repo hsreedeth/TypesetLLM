@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>markdown renderer</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="brand-block">
+        <h1>markdown<br />renderer</h1>
+      </header>
+
+      <section class="workspace">
+        <label class="sr-only" for="markdown-input">Markdown input</label>
+        <textarea
+          id="markdown-input"
+          class="markdown-input"
+          placeholder="Paste markdown here . . ."
+          spellcheck="false"
+        ></textarea>
+
+        <div class="controls-panel">
+          <div id="status-panel" class="panel-button panel-status panel-status-idle">
+            <button id="convert-button" class="action-button" type="button">Convert to PDF</button>
+
+            <div id="loading-indicator" class="loading-indicator" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+            <p id="status-message" class="status-message" aria-live="polite"></p>
+          </div>
+
+          <button id="download-button" class="panel-button action-button action-button-muted" type="button" disabled>
+            Download PDF
+          </button>
+        </div>
+      </section>
+
+      <footer class="footer-note">
+        <span>Hari Sreedeth 2026</span>
+        <span>&bull;</span>
+        <a href="https://github.com" target="_blank" rel="noreferrer">GitHub</a>
+      </footer>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

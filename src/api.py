@@ -18,6 +18,7 @@ from typing import Any, Callable, Final, Tuple
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 try:
     from slowapi import Limiter
@@ -58,6 +59,9 @@ if RateLimitExceeded is not None:
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR: Final[Path] = BASE_DIR / "templates"
 DEFAULT_TEMPLATE: Final[Path] = TEMPLATES_DIR / "vintage.tex"
+WEB_DIR: Final[Path] = BASE_DIR / "web"
+INDEX_HTML: Final[Path] = WEB_DIR / "index.html"
+FONTS_DIR: Final[Path] = BASE_DIR / "fonts"
 
 # guardrails: LaTeX can read/write files and spawn commands depending on config.
 # this is not a sandbox, it's just removing the obvious foot-guns.
@@ -116,6 +120,20 @@ async def _extract_payload(request: Request) -> Tuple[str, str]:
         )
 
     return markdown_text, theme
+
+
+if WEB_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+if FONTS_DIR.is_dir():
+    app.mount("/fonts", StaticFiles(directory=FONTS_DIR), name="fonts")
+
+
+@app.get("/", include_in_schema=False)
+async def index() -> FileResponse:
+    if not INDEX_HTML.is_file():
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Web app missing on server.")
+    return FileResponse(INDEX_HTML, media_type="text/html")
 
 
 @app.get("/health", tags=["meta"])

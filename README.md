@@ -5,11 +5,14 @@ Render Markdown to PDF with Pandoc + XeLaTeX.
 ## Setup
 
 Requires `pandoc` and `xelatex`.
+Note: Deactivate any active conda environments before starting up.
 
 ```bash
+conda deactivate
 python -m venv .venv
 . .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
+python run_local.py
 ```
 
 ## Convert a file
@@ -26,5 +29,13 @@ The converter uses the bundled template, Lua filter, and bundled fonts directly.
 ```bash
 uvicorn src.api:app --host 0.0.0.0 --port 8000
 ```
+
+If the `uvicorn` CLI is slow to start on your machine, use:
+
+```bash
+python run_local.py
+```
+
+Open `http://localhost:8000` for the local web app.
 
 POST Markdown text to `/convert` and it returns a PDF.
