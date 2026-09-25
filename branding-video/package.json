@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "render": "remotion render src/index.ts BrandingCycle ../web/branding/branding-4.mp4 --codec h264 --crf 18",
-    "studio": "remotion studio src/index.ts"
+    "studio": "remotion studio src/index.ts",
+    "test:motion": "node tests/motion.cjs"
   },
   "dependencies": {
     "@remotion/cli": "4.0.527",

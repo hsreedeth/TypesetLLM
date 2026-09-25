@@ -3,43 +3,75 @@ import {
   AbsoluteFill,
   continueRender,
   delayRender,
-  Easing,
-  interpolate,
   staticFile,
   useCurrentFrame,
+  useVideoConfig,
 } from 'remotion';
 
-// The model names accelerate from slow changes to four-frame flips, then decelerate.
+// Each timestamp is when the next name reaches the fixed title position.
+// The intervals shrink gradually, then grow again; the motion never resets
+// between names, so velocity stays continuous even at the fastest point.
 export const wordTimeline = [
   {at: 0, name: 'ChatGPT'},
-  {at: 36, name: 'Claude'},
-  {at: 66, name: 'Gemini'},
-  {at: 91, name: 'Kimi.ai'},
-  {at: 112, name: 'DeepSeek'},
-  {at: 130, name: 'ChatGPT'},
-  {at: 145, name: 'Claude'},
-  {at: 157, name: 'Gemini'},
-  {at: 167, name: 'Kimi.ai'},
-  {at: 175, name: 'DeepSeek'},
-  {at: 181, name: 'ChatGPT'},
-  {at: 186, name: 'Claude'},
-  {at: 190, name: 'Gemini'},
-  {at: 194, name: 'Kimi.ai'},
-  {at: 198, name: 'DeepSeek'},
-  {at: 202, name: 'ChatGPT'},
-  {at: 207, name: 'Claude'},
-  {at: 213, name: 'Gemini'},
-  {at: 221, name: 'Kimi.ai'},
-  {at: 232, name: 'DeepSeek'},
-  {at: 246, name: 'ChatGPT'},
-  {at: 264, name: 'Claude'},
-  {at: 286, name: 'LLM'},
+  {at: 1.25, name: 'Claude'},
+  {at: 2.35, name: 'Gemini'},
+  {at: 3.30, name: 'Kimi.ai'},
+  {at: 4.15, name: 'DeepSeek'},
+  {at: 4.90, name: 'ChatGPT'},
+  {at: 5.55, name: 'Claude'},
+  {at: 6.10, name: 'Gemini'},
+  {at: 6.55, name: 'Kimi.ai'},
+  {at: 6.91, name: 'DeepSeek'},
+  {at: 7.19, name: 'ChatGPT'},
+  {at: 7.42, name: 'Claude'},
+  {at: 7.61, name: 'Gemini'},
+  {at: 7.78, name: 'Kimi.ai'},
+  {at: 7.94, name: 'DeepSeek'},
+  {at: 8.10, name: 'ChatGPT'},
+  {at: 8.27, name: 'Claude'},
+  {at: 8.46, name: 'Gemini'},
+  {at: 8.69, name: 'Kimi.ai'},
+  {at: 8.97, name: 'DeepSeek'},
+  {at: 9.33, name: 'ChatGPT'},
+  {at: 9.79, name: 'Claude'},
+  {at: 10.37, name: 'Gemini'},
+  {at: 11.10, name: 'DeepSeek'},
+  {at: 11.90, name: 'LLM'},
 ] as const;
 
-const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
+function slopeAt(index: number): number {
+  if (index === 0 || index === wordTimeline.length - 1) return 0;
+  const previousGap = wordTimeline[index].at - wordTimeline[index - 1].at;
+  const nextGap = wordTimeline[index + 1].at - wordTimeline[index].at;
+  const previousSpeed = 1 / previousGap;
+  const nextSpeed = 1 / nextGap;
+  const weightPrevious = 2 * nextGap + previousGap;
+  const weightNext = nextGap + 2 * previousGap;
+  return (weightPrevious + weightNext) / (weightPrevious / previousSpeed + weightNext / nextSpeed);
+}
+
+export function reelPositionAt(seconds: number): number {
+  const last = wordTimeline.length - 1;
+  if (seconds <= 0) return 0;
+  if (seconds >= wordTimeline[last].at) return last;
+
+  const index = wordTimeline.findIndex((item, next) => next < last && seconds < wordTimeline[next + 1].at);
+  const start = wordTimeline[index].at;
+  const duration = wordTimeline[index + 1].at - start;
+  const t = (seconds - start) / duration;
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const startTangent = duration * slopeAt(index);
+  const endTangent = duration * slopeAt(index + 1);
+  return (2 * t3 - 3 * t2 + 1) * index
+    + (t3 - 2 * t2 + t) * startTangent
+    + (-2 * t3 + 3 * t2) * (index + 1)
+    + (t3 - t2) * endTangent;
+}
 
 export const BrandingCycle: React.FC = () => {
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   const [fontHandle] = useState(() => delayRender('Loading Inter'));
 
   useEffect(() => {
@@ -59,44 +91,34 @@ export const BrandingCycle: React.FC = () => {
     return () => { active = false; };
   }, [fontHandle]);
 
-  const tryOpacity = interpolate(frame, [303, 326], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
-  const tryY = interpolate(frame, [303, 326], [-30, 0], {...clamp, easing: Easing.out(Easing.cubic)});
+  const position = reelPositionAt(frame / fps);
 
   return (
     <AbsoluteFill style={{backgroundColor: '#fcf8f4', justifyContent: 'center', alignItems: 'center'}}>
       <div style={{position: 'absolute', left: '25%', top: '46%', height: 180, fontFamily: 'Inter Brand, sans-serif', fontSize: 128, fontWeight: 400, letterSpacing: '-0.035em', whiteSpace: 'nowrap', color: '#0b0b0b'}}>
         <div style={{position: 'absolute', left: 0, top: 0}}>Typeset</div>
-        {wordTimeline.map(({at, name}, index) => {
-        const nextAt = wordTimeline[index + 1]?.at ?? 390;
-        const previousAt = wordTimeline[index - 1]?.at ?? 0;
-        const entering = index === 0 ? 0 : Math.min(12, Math.max(2, (at - previousAt) * 0.45));
-        const leaving = index === wordTimeline.length - 1 ? 0 : Math.min(12, Math.max(2, (nextAt - at) * 0.45));
-        const inOpacity = index === 0 ? 1 : interpolate(frame, [at, at + entering], [0, 1], {...clamp, easing: Easing.out(Easing.cubic)});
-        const outOpacity = index === wordTimeline.length - 1 ? 1 : interpolate(frame, [nextAt - leaving, nextAt], [1, 0], {...clamp, easing: Easing.in(Easing.cubic)});
-        const opacity = Math.min(inOpacity, outOpacity);
-        if (opacity <= 0) return null;
-        const enterY = index === 0 ? 0 : interpolate(frame, [at, at + entering], [-46, 0], clamp);
-        const exitY = index === wordTimeline.length - 1 ? 0 : interpolate(frame, [nextAt - leaving, nextAt], [0, 46], clamp);
-        const enterFlip = index === 0 ? 0 : interpolate(frame, [at, at + entering], [65, 0], clamp);
-        const exitFlip = index === wordTimeline.length - 1 ? 0 : interpolate(frame, [nextAt - leaving, nextAt], [0, -65], clamp);
-        return (
-          <div
-            key={`${at}-${name}`}
-            style={{
-              position: 'absolute',
-              left: 405,
-              top: 0,
-              opacity,
-              transform: `perspective(700px) translateY(${enterY + exitY}px) rotateX(${enterFlip + exitFlip}deg)`,
-              transformOrigin: 'center center',
-              backfaceVisibility: 'hidden',
-            }}
-          >
-            {name}
-          </div>
-        );
-        })}
-        <div style={{position: 'absolute', left: 0, top: -190, width: 760, textAlign: 'center', fontSize: 76, opacity: tryOpacity, transform: `translateY(${tryY}px)`}}>Try</div>
+        <div style={{position: 'absolute', left: 405, top: -22, width: 850, height: 205, overflow: 'hidden', perspective: 900}}>
+          {wordTimeline.map(({name}, index) => {
+            const distance = position - index;
+            if (Math.abs(distance) >= 1) return null;
+            return (
+              <div
+                key={index}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 22,
+                  opacity: Math.pow(1 - Math.abs(distance), 0.6),
+                  transform: `translateY(${distance * 150}px) rotateX(${-distance * 36}deg)`,
+                  transformOrigin: 'center center',
+                  backfaceVisibility: 'hidden',
+                }}
+              >
+                {name}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </AbsoluteFill>
   );

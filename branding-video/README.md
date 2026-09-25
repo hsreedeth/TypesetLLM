@@ -8,10 +8,11 @@ To regenerate it locally, run `npm ci` and `npm run render` in this directory.
 Remotion downloads Chrome Headless Shell on first use. If that download is not
 available, run the render command with a local `--browser-executable` path.
 
-The clip is 1628 × 1584 at 30 fps for 13 seconds. It begins with
+The clip is 1628 × 1584 at 60 fps for 13.5 seconds. It begins with
 TypesetChatGPT, keeps `Typeset` fixed while Claude, Gemini, Kimi.ai and
-DeepSeek flip increasingly quickly, then decelerates and holds on
-`Try` above `TypesetLLM`. No blur filter is applied. Inter is
+DeepSeek move through a continuous vertical reel, then decelerates and holds
+on `TypesetLLM`. No blur filter is applied. Run `npm run test:motion` to check
+that the reel never moves backwards or jumps between names. Inter is
 bundled from the repository's licensed font file. The original fourth image is
 retained as `../web/branding/branding-4-poster.png`; the carousel uses a
 rendered first-frame poster so playback does not flash the final title first.
