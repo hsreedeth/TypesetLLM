@@ -13,30 +13,18 @@ import {
 // between names, so velocity stays continuous even at the fastest point.
 export const wordTimeline = [
   {at: 0, name: 'ChatGPT'},
-  {at: 1.25, name: 'Claude'},
-  {at: 2.35, name: 'Gemini'},
-  {at: 3.30, name: 'Kimi.ai'},
-  {at: 4.15, name: 'DeepSeek'},
-  {at: 4.90, name: 'ChatGPT'},
-  {at: 5.55, name: 'Claude'},
-  {at: 6.10, name: 'Gemini'},
-  {at: 6.55, name: 'Kimi.ai'},
-  {at: 6.91, name: 'DeepSeek'},
-  {at: 7.19, name: 'ChatGPT'},
-  {at: 7.42, name: 'Claude'},
-  {at: 7.61, name: 'Gemini'},
-  {at: 7.78, name: 'Kimi.ai'},
-  {at: 7.94, name: 'DeepSeek'},
-  {at: 8.10, name: 'ChatGPT'},
-  {at: 8.27, name: 'Claude'},
-  {at: 8.46, name: 'Gemini'},
-  {at: 8.69, name: 'Kimi.ai'},
-  {at: 8.97, name: 'DeepSeek'},
-  {at: 9.33, name: 'ChatGPT'},
-  {at: 9.79, name: 'Claude'},
-  {at: 10.37, name: 'Gemini'},
-  {at: 11.10, name: 'DeepSeek'},
-  {at: 11.90, name: 'LLM'},
+  {at: 0.43, name: 'Claude'},
+  {at: 0.83, name: 'Gemini'},
+  {at: 1.23, name: 'Kimi.ai'},
+  {at: 1.63, name: 'DeepSeek'},
+  {at: 1.90, name: 'ChatGPT'},
+  {at: 2.05, name: 'Claude'},
+  {at: 2.17, name: 'Gemini'},
+  {at: 2.27, name: 'Kimi.ai'},
+  {at: 2.37, name: 'DeepSeek'},
+  {at: 2.52, name: 'ChatGPT'},
+  {at: 2.73, name: 'Claude'},
+  {at: 3.02, name: 'LLM'},
 ] as const;
 
 function slopeAt(index: number): number {
@@ -97,7 +85,7 @@ export const BrandingCycle: React.FC = () => {
     <AbsoluteFill style={{backgroundColor: '#fcf8f4', justifyContent: 'center', alignItems: 'center'}}>
       <div style={{position: 'absolute', left: '25%', top: '46%', height: 180, fontFamily: 'Inter Brand, sans-serif', fontSize: 128, fontWeight: 400, letterSpacing: '-0.035em', whiteSpace: 'nowrap', color: '#0b0b0b'}}>
         <div style={{position: 'absolute', left: 0, top: 0}}>Typeset</div>
-        <div style={{position: 'absolute', left: 405, top: -22, width: 850, height: 205, overflow: 'hidden', perspective: 900}}>
+        <div style={{position: 'absolute', left: 405, top: -70, width: 850, height: 300, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)'}}>
           {wordTimeline.map(({name}, index) => {
             const distance = position - index;
             if (Math.abs(distance) >= 1) return null;
@@ -107,11 +95,8 @@ export const BrandingCycle: React.FC = () => {
                 style={{
                   position: 'absolute',
                   left: 0,
-                  top: 22,
-                  opacity: Math.pow(1 - Math.abs(distance), 0.6),
-                  transform: `translateY(${distance * 150}px) rotateX(${-distance * 36}deg)`,
-                  transformOrigin: 'center center',
-                  backfaceVisibility: 'hidden',
+                  top: 70,
+                  transform: `translateY(${distance * 170}px)`,
                 }}
               >
                 {name}
