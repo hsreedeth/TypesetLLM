@@ -63,6 +63,10 @@ can be matched with server logs.
 The UI accepts pasted Markdown or an uploaded `.md` file, shows an in-page PDF
 preview, and downloads with a filename based on the document title or heading.
 Changing the source cancels a pending conversion and disables the old download.
+On each page load, a four-slide branding introduction opens over the dimmed,
+blurred app. It advances automatically, supports swipe, arrows and keyboard
+navigation, and can be closed with the × button or Escape. The fourth slide is
+a prerendered Remotion video; see `branding-video/README.md` to regenerate it.
 Successful PDF responses include any quality notices in the
 `X-Typeset-Warnings` header. The public API retains JSON, form and raw body
 input modes and returns a PDF body on success.

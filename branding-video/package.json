@@ -3,7 +3,7 @@
   "name": "typesetllm-branding-video",
   "version": "1.0.0",
   "scripts": {
-    "render": "remotion render src/index.ts BrandingCycle ../web/branding/branding-4.mp4 --codec h264 --crf 20",
+    "render": "remotion render src/index.ts BrandingCycle ../web/branding/branding-4.mp4 --codec h264 --crf 18",
     "studio": "remotion studio src/index.ts"
   },
   "dependencies": {

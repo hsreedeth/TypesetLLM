@@ -17,6 +17,9 @@ const brandingVideo = document.getElementById('branding-video');
 const brandingPrevious = document.getElementById('branding-previous');
 const brandingNext = document.getElementById('branding-next');
 const brandingCount = document.getElementById('branding-count');
+const brandingOverlay = document.getElementById('branding-overlay');
+const brandingClose = document.getElementById('branding-close');
+const pageShell = document.getElementById('page-shell');
 
 let pdfBlobUrl = null;
 let pdfFilename = 'converted_document.pdf';
@@ -162,17 +165,43 @@ function startBrandCycle(delay = 10000) {
 const brandingSlideCount = brandingSlides.children.length;
 let activeBrandingSlide = 0;
 let brandingScrollFrame = 0;
+let brandingAutoTimer = 0;
+let brandingInteracted = false;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if (reducedMotion) brandingVideo.poster = '/static/branding/branding-4-poster.png';
+
+function stopBrandingAutoplay() {
+  brandingInteracted = true;
+  window.clearTimeout(brandingAutoTimer);
+}
+
+function scheduleBrandingAdvance() {
+  window.clearTimeout(brandingAutoTimer);
+  if (brandingInteracted || reducedMotion || brandingOverlay.hidden || activeBrandingSlide >= brandingSlideCount - 1) return;
+  brandingAutoTimer = window.setTimeout(() => goToBrandingSlide(activeBrandingSlide + 1), 4200);
+}
+
+function closeBranding() {
+  window.clearTimeout(brandingAutoTimer);
+  brandingVideo.pause();
+  brandingOverlay.hidden = true;
+  document.body.classList.remove('branding-open');
+  pageShell.inert = false;
+  textarea.focus();
+}
 
 function updateBrandingSlide() {
   const index = Math.max(0, Math.min(brandingSlideCount - 1, Math.round(brandingSlides.scrollLeft / brandingSlides.clientWidth)));
   if (index !== activeBrandingSlide) {
     activeBrandingSlide = index;
-    if (index === brandingSlideCount - 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (index === brandingSlideCount - 1 && !reducedMotion) {
       brandingVideo.currentTime = 0;
       brandingVideo.play().catch(() => {});
     } else {
       brandingVideo.pause();
     }
+    scheduleBrandingAdvance();
   }
   brandingCount.textContent = `${index + 1} / ${brandingSlideCount}`;
   brandingPrevious.disabled = index === 0;
@@ -183,10 +212,13 @@ function goToBrandingSlide(index) {
   const target = Math.max(0, Math.min(brandingSlideCount - 1, index));
   brandingSlides.scrollTo({
     left: target * brandingSlides.clientWidth,
-    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    behavior: reducedMotion ? 'auto' : 'smooth',
   });
 }
 
+brandingClose.addEventListener('click', closeBranding);
+brandingSlides.addEventListener('pointerdown', stopBrandingAutoplay);
+brandingSlides.addEventListener('wheel', stopBrandingAutoplay, {passive: true});
 brandingSlides.addEventListener('scroll', () => {
   window.cancelAnimationFrame(brandingScrollFrame);
   brandingScrollFrame = window.requestAnimationFrame(updateBrandingSlide);
@@ -194,18 +226,30 @@ brandingSlides.addEventListener('scroll', () => {
 brandingSlides.addEventListener('keydown', (event) => {
   if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
   event.preventDefault();
+  stopBrandingAutoplay();
   goToBrandingSlide(activeBrandingSlide + (event.key === 'ArrowRight' ? 1 : -1));
 });
-brandingPrevious.addEventListener('click', () => goToBrandingSlide(activeBrandingSlide - 1));
-brandingNext.addEventListener('click', () => goToBrandingSlide(activeBrandingSlide + 1));
+brandingPrevious.addEventListener('click', () => { stopBrandingAutoplay(); goToBrandingSlide(activeBrandingSlide - 1); });
+brandingNext.addEventListener('click', () => { stopBrandingAutoplay(); goToBrandingSlide(activeBrandingSlide + 1); });
 brandingVideo.addEventListener('click', () => {
   brandingVideo.currentTime = 0;
   brandingVideo.play().catch(() => {});
+});
+document.addEventListener('keydown', (event) => {
+  if (brandingOverlay.hidden) return;
+  if (event.key === 'Escape') { closeBranding(); return; }
+  if (event.key !== 'Tab') return;
+  const focusables = [brandingClose, brandingSlides, brandingPrevious, brandingNext];
+  const current = focusables.indexOf(document.activeElement);
+  if (event.shiftKey && current === 0) { event.preventDefault(); brandingNext.focus(); }
+  if (!event.shiftKey && current === focusables.length - 1) { event.preventDefault(); brandingClose.focus(); }
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) brandingVideo.pause();
 });
 updateBrandingSlide();
+scheduleBrandingAdvance();
+brandingClose.focus();
 
 convertButton.addEventListener('click', convertMarkdown);
 retryButton.addEventListener('click', convertMarkdown);

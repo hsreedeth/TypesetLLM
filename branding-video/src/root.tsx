@@ -6,9 +6,9 @@ export const Root: React.FC = () => (
   <Composition
     id="BrandingCycle"
     component={BrandingCycle}
-    durationInFrames={330}
+    durationInFrames={390}
     fps={30}
-    width={814}
-    height={792}
+    width={1628}
+    height={1584}
   />
 );
