@@ -43,6 +43,31 @@ $else$
 }
 $endif$
 \newcommand{\greekchar}[1]{{\greekfallbackfont\char"#1}}
+% Preserve scientific super/subscripts even when the primary font lacks them.
+\newcommand{\supchar}[1]{\textsuperscript{#1}}
+\newcommand{\subchar}[1]{\textsubscript{#1}}
+\catcode`⁰=\active \protected\def ⁰{\supchar{0}}
+\catcode`¹=\active \protected\def ¹{\supchar{1}}
+\catcode`²=\active \protected\def ²{\supchar{2}}
+\catcode`³=\active \protected\def ³{\supchar{3}}
+\catcode`⁴=\active \protected\def ⁴{\supchar{4}}
+\catcode`⁵=\active \protected\def ⁵{\supchar{5}}
+\catcode`⁶=\active \protected\def ⁶{\supchar{6}}
+\catcode`⁷=\active \protected\def ⁷{\supchar{7}}
+\catcode`⁸=\active \protected\def ⁸{\supchar{8}}
+\catcode`⁹=\active \protected\def ⁹{\supchar{9}}
+\catcode`⁻=\active \protected\def ⁻{\supchar{\ensuremath{-}}}
+\catcode`⁺=\active \protected\def ⁺{\supchar{\ensuremath{+}}}
+\catcode`₀=\active \protected\def ₀{\subchar{0}}
+\catcode`₁=\active \protected\def ₁{\subchar{1}}
+\catcode`₂=\active \protected\def ₂{\subchar{2}}
+\catcode`₃=\active \protected\def ₃{\subchar{3}}
+\catcode`₄=\active \protected\def ₄{\subchar{4}}
+\catcode`₅=\active \protected\def ₅{\subchar{5}}
+\catcode`₆=\active \protected\def ₆{\subchar{6}}
+\catcode`₇=\active \protected\def ₇{\subchar{7}}
+\catcode`₈=\active \protected\def ₈{\subchar{8}}
+\catcode`₉=\active \protected\def ₉{\subchar{9}}
 \catcode`Α=\active \protected\def Α{\greekchar{0391}}
 \catcode`Β=\active \protected\def Β{\greekchar{0392}}
 \catcode`Γ=\active \protected\def Γ{\greekchar{0393}}
@@ -97,7 +122,7 @@ $endif$
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead{}
-\fancyhead[LE,RO]{\small MD2PDF alpha v1.0}
+\fancyhead[LE,RO]{\small TypesetLLM}
 \fancyhead[LO,RE]{\small \leftmark}
 \fancyfoot[C]{\thepage}
 
@@ -138,9 +163,13 @@ $highlighting-macros$
 $endif$
 
 % -------------------- Code blocks --------------
-\usepackage{fancyvrb}
+\usepackage{fvextra}
 \DefineVerbatimEnvironment{Highlighting}{Verbatim}{%
-  commandchars=\\\{\}, fontsize=\scriptsize}
+  commandchars=\\\{\},
+  fontsize=\scriptsize,
+  breaklines=true,
+  breakanywhere=true,
+  breaksymbolleft={}}
 
 % -------------- Un-numbered sections -----------
 \setcounter{secnumdepth}{0}
@@ -151,6 +180,21 @@ $endif$
 \usepackage{graphicx}
 \usepackage{adjustbox}
 
+$if(title)$
+\title{$title$}
+$endif$
+$if(author)$
+\author{$for(author)$$author$$sep$ \\ $endfor$}
+$endif$
+$if(date)$
+\date{$date$}
+$else$
+\date{}
+$endif$
+
 \begin{document}
+$if(title)$
+\maketitle
+$endif$
 $body$
 \end{document}

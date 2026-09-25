@@ -3,53 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>markdown renderer</title>
+    <title>TypesetLLM — Markdown to PDF</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
     <main class="page-shell">
       <header class="brand-block">
-        <h1>markdown<br />renderer</h1>
+        <h1 id="brand-heading" aria-label="TypesetLLM">Typeset<span id="brand-suffix" class="brand-suffix" aria-hidden="true">LLM</span></h1>
+        <p class="brand-description">Have you ever felt like turning your AI-generated Markdowns (.md files) into polished PDFs with properly formatted tables, equations and code?<br />me too.</p>
       </header>
-
-      <section class="workspace">
+      <section class="workspace" aria-label="Markdown converter">
         <label class="sr-only" for="markdown-input">Markdown input</label>
-        <textarea
-          id="markdown-input"
-          class="markdown-input"
-          placeholder="Paste markdown here . . ."
-          spellcheck="false"
-        ></textarea>
-
-        <div class="controls-panel">
-          <div id="status-panel" class="panel-button panel-status panel-status-idle">
-            <button id="convert-button" class="action-button" type="button">Convert to PDF</button>
-
-            <div id="loading-indicator" class="loading-indicator" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
-              <span></span>
+        <textarea id="markdown-input" class="markdown-input" placeholder="Paste Markdown Here" spellcheck="false"></textarea>
+        <div class="controls-row">
+          <input id="file-input" class="sr-only" type="file" accept=".md,.markdown,text/markdown,text/plain" />
+          <button id="upload-button" class="control-button upload-button" type="button">Upload Markdown file</button>
+          <div class="controls-panel">
+            <div id="status-panel" class="panel-button panel-status panel-status-idle">
+              <button id="convert-button" class="action-button" type="button">Convert to PDF</button>
+              <div class="loading-indicator" aria-hidden="true"><span></span><span></span><span></span></div>
+              <p id="status-message" class="status-message" role="status" aria-live="polite"></p>
             </div>
-
-            <p id="status-message" class="status-message" aria-live="polite"></p>
+            <button id="download-button" class="panel-button download-button" type="button" disabled>Download PDF</button>
           </div>
-
-          <button id="download-button" class="panel-button action-button action-button-muted" type="button" disabled>
-            Download PDF
-          </button>
         </div>
+        <div id="result-actions" class="result-actions"><a id="preview-link" href="#pdf-preview">Preview PDF</a><button id="retry-button" class="control-button" type="button">Convert again</button></div>
+        <p id="warnings" class="warnings" role="status" aria-live="polite"></p>
+        <iframe id="pdf-preview" class="pdf-preview" title="PDF preview"></iframe>
       </section>
-
-      <footer class="footer-note">
-        <span>Hari Sreedeth 2026</span>
-        <span>&bull;</span>
-        <a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a>
-      </footer>
+      <footer class="footer-note"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
     </main>
-
     <script src="/static/app.js"></script>
   </body>
 </html>

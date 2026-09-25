@@ -25,8 +25,11 @@ Minor improvements in this rewrite
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import logging
 import os
+import re
+import subprocess
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -37,45 +40,112 @@ import pypandoc
 # bundled stuff lives relative to repo root (keeps docker + tests happier)
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
 DEFAULT_TEMPLATE: Final[Path] = BASE_DIR / "templates" / "vintage.tex"
-LUA_FILTER: Final[Path] = BASE_DIR / "filters" / "landscape-6col.lua"
+LUA_FILTER: Final[Path] = BASE_DIR / "filters" / "content-aware-tables.lua"
 FONTS_DIR: Final[Path] = BASE_DIR / "fonts"
 DEFAULT_MARKDOWN_FORMAT: Final[str] = (
-    "markdown+yaml_metadata_block+tex_math_dollars+fenced_divs+bracketed_spans"
+    "markdown+yaml_metadata_block+tex_math_dollars+tex_math_single_backslash+fenced_divs+bracketed_spans"
     "+fenced_code_attributes+pipe_tables+grid_tables+multiline_tables+simple_tables"
     "+table_captions+implicit_figures+link_attributes+task_lists+strikeout+footnotes"
     "+raw_tex+smart"
 )
+WEB_MARKDOWN_FORMAT: Final[str] = DEFAULT_MARKDOWN_FORMAT.replace("+raw_tex", "-raw_tex")
+CONVERSION_TIMEOUT_SECONDS: Final[int] = int(os.environ.get("CONVERSION_TIMEOUT_SECONDS", "45"))
 
 
-def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> None:  # noqa: D401 – keep signature untouched
-    """Convert src md -> dst pdf.
+@dataclass(frozen=True)
+class ConversionResult:
+    warnings: tuple[str, ...] = ()
+    diagnostics: str = ""
 
-    NOTE: tests + API import this directly, so don't get clever w/ args.
-    """
 
-    # sanity: fail early w/ msgs tests grep for
+class ConversionError(RuntimeError):
+    def __init__(self, message: str, diagnostics: str = "", *, input_error: bool = False) -> None:
+        super().__init__(message)
+        self.diagnostics = diagnostics
+        self.input_error = input_error
+
+
+_MISSING_GLYPH_RE = re.compile(r"Missing character: There is no (.*?) \(U\+([0-9A-F]+)\)")
+
+
+def _diagnostic_warnings(stderr: str) -> list[str]:
+    warnings: list[str] = []
+    missing = []
+    for character, codepoint in _MISSING_GLYPH_RE.findall(stderr):
+        label = character.strip() or "character"
+        item = f"{label} (U+{codepoint})"
+        if item not in missing:
+            missing.append(item)
+    if missing:
+        warnings.append("Unsupported glyphs may be absent from the PDF: " + ", ".join(missing))
+    if "Overfull \\hbox" in stderr:
+        warnings.append("Some content may extend beyond its text area; review the PDF preview.")
+    return warnings
+
+
+def _preflight_warnings(markdown: str, source_dir: Path) -> list[str]:
+    warnings: list[str] = []
+    fenced = False
+    visible_lines: list[str] = []
+    for line in markdown.splitlines():
+        fence = re.match(r"^\s*(```+|~~~+)\s*([^\s]*)", line)
+        if fence:
+            if not fenced and fence.group(2).lower() == "mermaid":
+                warnings.append("Mermaid diagrams are not rendered; the source block is shown as code.")
+            fenced = not fenced
+            visible_lines.append("")
+            continue
+        visible_lines.append("" if fenced else re.sub(r"`[^`]*`", "", line))
+
+    visible = "\n".join(visible_lines)
+    citation_keys = sorted(set(re.findall(r"(?<!\\)\[@([A-Za-z0-9_:.+/-]+)", visible)))
+    if citation_keys:
+        warnings.append("Unresolved citation keys: " + ", ".join(citation_keys))
+
+    for target in re.findall(r"!\[[^\]]*\]\(([^)\s]+)", visible):
+        clean_target = target.strip("<>")
+        if re.match(r"^(?:https?://|data:)", clean_target, re.IGNORECASE):
+            warnings.append(f"External image was not validated: {clean_target}")
+        elif not (source_dir / clean_target).is_file():
+            warnings.append(f"Missing image: {clean_target}")
+    return list(dict.fromkeys(warnings))
+
+
+def _input_error(stderr: str) -> bool:
+    markers = (
+        "File ended while scanning",
+        "Runaway argument",
+        "Missing $ inserted",
+        "Extra }, or forgotten",
+    )
+    return any(marker in stderr for marker in markers)
+
+
+def convert_with_diagnostics(
+    src: Path,
+    dst: Path,
+    markdown_format: str,
+    template_path: Path,
+) -> ConversionResult:
+    """Convert Markdown and return bounded, user-facing diagnostics."""
+
     if not src.is_file():
         raise FileNotFoundError(f"source file does not exist: {src}")
-
-    # tpl must exist. if not, better to crash than silently make junk output.
     if not template_path.is_file():
         raise FileNotFoundError(f"template does not exist: {template_path}")
-
-    # lua filter is "required" right now. if this goes missing, packaging is broken.
     if not LUA_FILTER.is_file():
         raise FileNotFoundError(f"lua filter does not exist: {LUA_FILTER}")
-
     if not FONTS_DIR.is_dir():
         raise FileNotFoundError(f"fonts directory does not exist: {FONTS_DIR}")
 
-    # make sure out dir exists (pandoc won't do it for you)
     dst.parent.mkdir(parents=True, exist_ok=True)
-
     resource_paths = [src.parent.resolve(), Path.cwd().resolve(), BASE_DIR.resolve()]
     resource_path_arg = os.pathsep.join(dict.fromkeys(str(path) for path in resource_paths))
-
-    # pandoc knobs. keep these boring + explicit so diffs are easy to read later.
-    extra_args = [
+    command = [
+        pypandoc.get_pandoc_path(),
+        str(src),
+        "-o",
+        str(dst),
         f"--template={template_path}",
         "--pdf-engine=xelatex",
         "--pdf-engine-opt=-interaction=nonstopmode",
@@ -86,24 +156,46 @@ def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> 
         "-V",
         f"fontdir={FONTS_DIR.resolve().as_posix()}/",
     ]
-
     if markdown_format and markdown_format.lower() != "auto":
-        extra_args.extend(["-f", markdown_format])
+        command.extend(["-f", markdown_format])
 
-    logging.debug("pandoc extra_args=%s", extra_args)
-
-    # do the work; pypandoc throws RuntimeError on pandoc failures
     try:
-        pypandoc.convert_file(
-            str(src),
-            to="pdf",
-            outputfile=str(dst),
-            extra_args=extra_args,
+        completed = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=CONVERSION_TIMEOUT_SECONDS,
+            check=False,
         )
-    except RuntimeError as exc:
-        # don't leak a mile of pandoc spew to callers; log it + raise a clean error
-        logging.error("pandoc failed: %s", exc)
-        raise RuntimeError("pandoc conversion failed") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise ConversionError("Conversion timed out.", str(exc)) from exc
+
+    diagnostics = completed.stderr[-12_000:]
+    if completed.returncode != 0:
+        logging.error("pandoc failed with exit code %s: %s", completed.returncode, diagnostics)
+        raise ConversionError(
+            "The Markdown contains an equation or construct that could not be typeset."
+            if _input_error(diagnostics)
+            else "The renderer could not generate this PDF.",
+            diagnostics,
+            input_error=_input_error(diagnostics),
+        )
+    if not dst.is_file() or dst.stat().st_size == 0:
+        raise ConversionError("The renderer produced an empty PDF.", diagnostics)
+
+    markdown = src.read_text(encoding="utf-8")
+    warnings = _preflight_warnings(markdown, src.parent)
+    warnings.extend(_diagnostic_warnings(diagnostics))
+    return ConversionResult(tuple(dict.fromkeys(warnings)), diagnostics)
+
+
+def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> None:  # noqa: D401 – keep signature untouched
+    """Convert src md -> dst pdf.
+
+    NOTE: tests + API import this directly, so don't get clever w/ args.
+    """
+
+    convert_with_diagnostics(src, dst, markdown_format, template_path)
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:

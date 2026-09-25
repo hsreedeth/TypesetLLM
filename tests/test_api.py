@@ -31,8 +31,19 @@ def client() -> AsyncClient:
 async def test_index_page_served(client: AsyncClient):
     resp = await client.get("/")
     assert resp.status_code == status.HTTP_200_OK
-    assert "markdown renderer" in resp.text.lower()
+    assert "typesetllm" in resp.text.lower()
     assert "convert to pdf" in resp.text.lower()
+
+
+@pytest.mark.asyncio
+async def test_renderer_readiness_is_a_real_render(client: AsyncClient):
+    from src.api import renderer_lifespan
+
+    async with renderer_lifespan(app):
+        response = await client.get("/ready")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["status"] == "ready"
+    assert response.json()["pandoc"].startswith("pandoc")
 
 
 # -------------------------------------------------------------------- ##
@@ -76,6 +87,28 @@ async def test_convert_json_success(client: AsyncClient):
     assert resp.content.startswith(b"%PDF-")
 
 
+@pytest.mark.asyncio
+async def test_named_output_and_warnings(client: AsyncClient):
+    resp = await client.post(
+        "/convert",
+        json={"markdown_text": "---\ntitle: Synthetic report\n---\n\n# Result\n\n[@missing2026]"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
+    assert "synthetic-report.pdf" in resp.headers["content-disposition"]
+    assert "missing2026" in resp.headers["x-typeset-warnings"]
+
+
+@pytest.mark.asyncio
+async def test_malformed_math_returns_reference(client: AsyncClient):
+    resp = await client.post(
+        "/convert",
+        json={"markdown_text": "# Invalid\n\n$$\n\\frac{1}{\n$$"},
+    )
+    assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert resp.json()["detail"]["reference"]
+    assert "equation" in resp.json()["detail"]["message"]
+
+
 # -------------------------------------------------------------------- #
 @pytest.mark.asyncio
 async def test_large_payload_success(client: AsyncClient):
@@ -101,11 +134,8 @@ async def test_large_payload_success(client: AsyncClient):
 
 ## -------------------------------------------------------------------- ##
 @pytest.mark.asyncio
-async def test_latex_injection_sanitised(client: AsyncClient):
-    """
-    Malicious LaTeX commands (e.g. \write18) should be stripped,
-    and the conversion should still succeed.
-    """
+async def test_raw_tex_disabled(client: AsyncClient):
+    """Untrusted raw TeX commands should not prevent PDF conversion."""
     malicious = "# Title\n\nHello \\write18{rm -rf /}"
     resp = await client.post(
         "/convert",
@@ -119,6 +149,16 @@ async def test_latex_injection_sanitised(client: AsyncClient):
         print("➡️  DEBUG body:", resp.text)
     assert resp.status_code == status.HTTP_200_OK
     assert resp.headers["content-type"].startswith("application/pdf")
+    assert resp.content.startswith(b"%PDF-")
+
+
+@pytest.mark.asyncio
+async def test_literal_tex_in_code_is_preserved(client: AsyncClient):
+    resp = await client.post(
+        "/convert",
+        json={"markdown_text": "# Literal command\n\n```tex\n\\input{example.tex}\n```"},
+    )
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.content.startswith(b"%PDF-")
 
 

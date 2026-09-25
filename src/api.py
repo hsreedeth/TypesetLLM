@@ -10,10 +10,12 @@ once + we never read the body twice.
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 import json
 import logging
 import os
 import re
+import uuid
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Callable, Final, Tuple
@@ -21,6 +23,7 @@ from typing import Any, Callable, Final, Tuple
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+import yaml
 
 try:
     from slowapi import Limiter
@@ -33,7 +36,20 @@ except ModuleNotFoundError:  # pragma: no cover - depends on local environment
     SlowAPIMiddleware = None
     get_remote_address = None
 
-app = FastAPI(title="Markdown → PDF API", version="0.5.1")
+@asynccontextmanager
+async def renderer_lifespan(application: FastAPI):
+    from src.smoke import run_smoke_check
+
+    try:
+        application.state.renderer_readiness = await asyncio.to_thread(run_smoke_check)
+    except Exception:
+        reference = uuid.uuid4().hex[:12]
+        logging.exception("Renderer readiness failed [%s]", reference)
+        application.state.renderer_readiness = {"status": "unavailable", "reference": reference}
+    yield
+
+
+app = FastAPI(title="Markdown → PDF API", version="0.5.1", lifespan=renderer_lifespan)
 
 
 def _positive_int_env(name: str, default: int) -> int:
@@ -49,6 +65,7 @@ MAX_REQUEST_BYTES: Final[int] = _positive_int_env("MAX_REQUEST_BYTES", 1_048_576
 MAX_CONCURRENT_CONVERSIONS: Final[int] = _positive_int_env("MAX_CONCURRENT_CONVERSIONS", 1)
 ALLOW_RAW_TEX: Final[bool] = os.environ.get("ALLOW_RAW_TEX", "false").lower() in {"1", "true", "yes"}
 _conversion_slots = asyncio.Semaphore(MAX_CONCURRENT_CONVERSIONS)
+app.state.renderer_readiness = {"status": "starting"}
 
 def _no_limit(func: Callable[..., Any]) -> Callable[..., Any]:
     return func
@@ -80,17 +97,26 @@ WEB_DIR: Final[Path] = BASE_DIR / "web"
 INDEX_HTML: Final[Path] = WEB_DIR / "index.html"
 FONTS_DIR: Final[Path] = BASE_DIR / "fonts"
 
-# guardrails: LaTeX can read/write files and spawn commands depending on config.
-# this is not a sandbox, it's just removing the obvious foot-guns.
-_DANGEROUS_RE = re.compile(r"\\(?:write18|input|include|openin|openout)")
-
 # themes map to template filenames. don't accept paths or funny business.
 _THEME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
-def _sanitize(md: str) -> str:
-    # strip a few commands we never want making it into the template
-    return _DANGEROUS_RE.sub("", md)
+def _output_filename(markdown: str) -> str:
+    """Choose a safe filename from YAML title, then a heading, then a default."""
+    title = None
+    match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", markdown, re.DOTALL)
+    if match:
+        try:
+            metadata = yaml.safe_load(match.group(1))
+            if isinstance(metadata, dict) and isinstance(metadata.get("title"), str):
+                title = metadata["title"]
+        except yaml.YAMLError:
+            pass
+    if not title:
+        heading = re.search(r"^#\s+(.+)$", markdown, re.MULTILINE)
+        title = heading.group(1) if heading else "converted_document"
+    slug = re.sub(r"[^a-z0-9]+", "-", title.casefold()).strip("-")[:64]
+    return f"{slug or 'converted_document'}.pdf"
 
 
 async def _extract_payload(request: Request) -> Tuple[str, str]:
@@ -177,12 +203,19 @@ async def health() -> dict[str, str]:  # noqa: D401
     return {"status": "ok"}
 
 
+@app.get("/ready", tags=["meta"])
+async def ready() -> JSONResponse:
+    result = app.state.renderer_readiness
+    code = status.HTTP_200_OK if result.get("status") == "ready" else status.HTTP_503_SERVICE_UNAVAILABLE
+    return JSONResponse(result, status_code=code)
+
+
 @app.post("/convert", response_class=FileResponse, tags=["conversion"])
 @convert_limit
 async def convert_endpoint(request: Request):  # noqa: D401
     markdown_text, theme = await _extract_payload(request)
 
-    md_clean = _sanitize(markdown_text)
+    md_clean = markdown_text
 
     # theme is a template name, not user-controlled filesystem access
     if not _THEME_RE.fullmatch(theme):
@@ -207,7 +240,11 @@ async def convert_endpoint(request: Request):  # noqa: D401
     pdf_path = Path(pdf_tmp.name)
 
     # imports here so the module loads fast and errors are localized to conversion
-    from src.cli import DEFAULT_MARKDOWN_FORMAT, convert as _convert_md_to_pdf
+    from src.cli import (
+        DEFAULT_MARKDOWN_FORMAT,
+        ConversionError,
+        convert_with_diagnostics,
+    )
 
     markdown_format = DEFAULT_MARKDOWN_FORMAT
     if not ALLOW_RAW_TEX:
@@ -216,25 +253,37 @@ async def convert_endpoint(request: Request):  # noqa: D401
     try:
         # Keep CPU- and memory-heavy TeX processes bounded on small instances.
         async with _conversion_slots:
-            await asyncio.to_thread(_convert_md_to_pdf, md_path, pdf_path, markdown_format, tpl_path)
+            result = await asyncio.to_thread(
+                convert_with_diagnostics, md_path, pdf_path, markdown_format, tpl_path
+            )
 
         # cheap sanity check; empty output usually means a LaTeX/pandoc failure upstream
         if pdf_path.stat().st_size == 0:
             raise RuntimeError("Empty PDF generated.")
-    except Exception:
-        logging.exception("Conversion failed.")
+    except Exception as exc:
+        reference = uuid.uuid4().hex[:12]
+        logging.exception("Conversion failed [%s]", reference)
         md_path.unlink(missing_ok=True)
         pdf_path.unlink(missing_ok=True)
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not generate PDF.")
+        user_error = isinstance(exc, ConversionError) and exc.input_error
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY if user_error else status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "message": str(exc) if isinstance(exc, ConversionError) else "Could not generate PDF.",
+                "reference": reference,
+            },
+        ) from exc
 
     # FileResponse streams the file; cleanup has to happen after the response is sent
     background_tasks = BackgroundTasks()
     background_tasks.add_task(md_path.unlink, missing_ok=True)
     background_tasks.add_task(pdf_path.unlink, missing_ok=True)
 
-    return FileResponse(
+    response = FileResponse(
         path=str(pdf_path),
         media_type="application/pdf",
-        filename="converted_document.pdf",
+        filename=_output_filename(md_clean),
         background=background_tasks,
     )
+    response.headers["X-Typeset-Warnings"] = json.dumps(result.warnings, ensure_ascii=True)
+    return response

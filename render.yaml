@@ -3,7 +3,7 @@ services:
     name: typesetllm
     runtime: docker
     plan: free
-    healthCheckPath: /health
+    healthCheckPath: /ready
     envVars:
       - key: MAX_REQUEST_BYTES
         value: "1048576"
