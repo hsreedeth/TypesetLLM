@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 
 # — Build-time arguments —
-ARG TL_PACKAGES="amsmath amssymb babel-english booktabs caption colortbl enumitem fancyhdr float fontspec framed geometry graphics hyperref listings longtable microtype multirow pdflscape rotating setspace subcaption tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval collection-fontsrecommended collection-latexrecommended"
+ARG TL_PACKAGES="adjustbox amsmath amssymb babel-english booktabs caption colortbl enumitem fancyhdr float fontspec framed geometry graphics hyperref listings longtable microtype multirow pdflscape rotating setspace subcaption tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval collection-fontsrecommended collection-latexrecommended"
 ARG PANDOC_VERSION=3.2
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -40,6 +40,9 @@ RUN set -eux; \
       base="$(basename "$f")"; \
       [ "$base" = "tlmgr" ] && continue; \
       ln -s "$f" /usr/local/bin/"$base"; \
+    done; \
+    for sty in adjustbox.sty amsmath.sty amssymb.sty array.sty booktabs.sty calc.sty fancyhdr.sty fancyvrb.sty fontspec.sty graphicx.sty hyperref.sty longtable.sty multicol.sty pdflscape.sty titlesec.sty xfp.sty; do \
+      kpsewhich "$sty" >/dev/null || { echo "Required LaTeX package missing: $sty"; exit 1; }; \
     done
 
 # Python dependencies 
