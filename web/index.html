@@ -30,6 +30,19 @@
         <div id="result-actions" class="result-actions"><a id="preview-link" href="#pdf-preview">Preview PDF</a><button id="retry-button" class="control-button" type="button">Convert again</button></div>
         <p id="warnings" class="warnings" role="status" aria-live="polite"></p>
         <iframe id="pdf-preview" class="pdf-preview" title="PDF preview"></iframe>
+        <section class="branding-carousel" aria-label="TypesetLLM branding slides">
+          <div id="branding-slides" class="branding-slides" tabindex="0" aria-label="Swipe to view four branding slides">
+            <div class="branding-slide"><img src="/static/branding/branding-1.png" alt="TypesetLLM introduction and report typography" loading="lazy" /></div>
+            <div class="branding-slide"><img src="/static/branding/branding-2.png" alt="A question about Markdown that looks ready to publish" loading="lazy" /></div>
+            <div class="branding-slide"><img src="/static/branding/branding-3.png" alt="A colourful composition of rendered Markdown, code and equations" loading="lazy" /></div>
+            <div class="branding-slide"><video id="branding-video" src="/static/branding/branding-4.mp4" poster="/static/branding/branding-4-start.png" muted playsinline preload="metadata" aria-label="Animated TypesetLLM branding finale"></video></div>
+          </div>
+          <div class="branding-navigation">
+            <button id="branding-previous" type="button" aria-label="Previous branding slide">←</button>
+            <span id="branding-count" aria-live="polite">1 / 4</span>
+            <button id="branding-next" type="button" aria-label="Next branding slide">→</button>
+          </div>
+        </section>
       </section>
       <footer class="footer-note"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
     </main>

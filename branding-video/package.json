@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "typesetllm-branding-video",
+  "version": "1.0.0",
+  "scripts": {
+    "render": "remotion render src/index.ts BrandingCycle ../web/branding/branding-4.mp4 --codec h264 --crf 20",
+    "studio": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.527",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.527"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.13",
+    "typescript": "5.9.3"
+  }
+}

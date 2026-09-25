@@ -12,6 +12,11 @@ const preview = document.getElementById('pdf-preview');
 const previewLink = document.getElementById('preview-link');
 const heading = document.getElementById('brand-heading');
 const suffix = document.getElementById('brand-suffix');
+const brandingSlides = document.getElementById('branding-slides');
+const brandingVideo = document.getElementById('branding-video');
+const brandingPrevious = document.getElementById('branding-previous');
+const brandingNext = document.getElementById('branding-next');
+const brandingCount = document.getElementById('branding-count');
 
 let pdfBlobUrl = null;
 let pdfFilename = 'converted_document.pdf';
@@ -153,6 +158,54 @@ function startBrandCycle(delay = 10000) {
     }, names.length * 2500);
   }, delay);
 }
+
+const brandingSlideCount = brandingSlides.children.length;
+let activeBrandingSlide = 0;
+let brandingScrollFrame = 0;
+
+function updateBrandingSlide() {
+  const index = Math.max(0, Math.min(brandingSlideCount - 1, Math.round(brandingSlides.scrollLeft / brandingSlides.clientWidth)));
+  if (index !== activeBrandingSlide) {
+    activeBrandingSlide = index;
+    if (index === brandingSlideCount - 1 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      brandingVideo.currentTime = 0;
+      brandingVideo.play().catch(() => {});
+    } else {
+      brandingVideo.pause();
+    }
+  }
+  brandingCount.textContent = `${index + 1} / ${brandingSlideCount}`;
+  brandingPrevious.disabled = index === 0;
+  brandingNext.disabled = index === brandingSlideCount - 1;
+}
+
+function goToBrandingSlide(index) {
+  const target = Math.max(0, Math.min(brandingSlideCount - 1, index));
+  brandingSlides.scrollTo({
+    left: target * brandingSlides.clientWidth,
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+  });
+}
+
+brandingSlides.addEventListener('scroll', () => {
+  window.cancelAnimationFrame(brandingScrollFrame);
+  brandingScrollFrame = window.requestAnimationFrame(updateBrandingSlide);
+});
+brandingSlides.addEventListener('keydown', (event) => {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+  event.preventDefault();
+  goToBrandingSlide(activeBrandingSlide + (event.key === 'ArrowRight' ? 1 : -1));
+});
+brandingPrevious.addEventListener('click', () => goToBrandingSlide(activeBrandingSlide - 1));
+brandingNext.addEventListener('click', () => goToBrandingSlide(activeBrandingSlide + 1));
+brandingVideo.addEventListener('click', () => {
+  brandingVideo.currentTime = 0;
+  brandingVideo.play().catch(() => {});
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) brandingVideo.pause();
+});
+updateBrandingSlide();
 
 convertButton.addEventListener('click', convertMarkdown);
 retryButton.addEventListener('click', convertMarkdown);
