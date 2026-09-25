@@ -146,11 +146,9 @@ function animateSuffix(next) {
 function startBrandCycle(delay = 10000) {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   window.setTimeout(() => {
-    heading.classList.add('computer-modern');
     const names = ['ChatGPT', 'Claude', 'Gemini', 'Kimi.ai', 'DeepSeek', 'LLM'];
     names.forEach((name, index) => window.setTimeout(() => animateSuffix(name), index * 2500));
     window.setTimeout(() => {
-      heading.classList.remove('computer-modern');
       startBrandCycle(15000);
     }, names.length * 2500);
   }, delay);

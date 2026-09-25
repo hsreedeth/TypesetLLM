@@ -1,5 +1,4 @@
 @font-face { font-family: Inter; src: url('/fonts/Inter-Variable.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
-@font-face { font-family: 'Computer Modern'; src: url('/fonts/lmroman10-regular.otf') format('opentype'); font-weight: 400; font-display: swap; }
 :root { font-family: Inter, sans-serif; font-weight: 300; color: #242428; background: #fff; }
 * { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
@@ -7,7 +6,6 @@ button, textarea { font: inherit; }
 .page-shell { min-height: 100vh; padding: 22px 3.2vw 18px; display: grid; grid-template-columns: minmax(180px,250px) minmax(0,1fr); grid-template-rows: 1fr auto; gap: 28px; }
 .brand-block { grid-column: 1; grid-row: 1; }
 .brand-block h1 { margin: 0; font-size: 18px; line-height: 1.25; letter-spacing: -.025em; font-weight: 500; white-space: nowrap; }
-.brand-block h1.computer-modern { font-family: 'Computer Modern', serif; font-weight: 400; }
 .brand-suffix { display: inline-block; }
 .brand-suffix.exit { animation: suffix-exit .35s ease-in forwards; }
 .brand-suffix.enter { animation: suffix-enter .4s ease-out both; }
