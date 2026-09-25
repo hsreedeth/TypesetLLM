@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="TSLLM">
+  <title>TSLLM</title>
+  <rect width="128" height="128" rx="20" fill="#fcf8f4"/>
+  <text x="64" y="58" fill="#171717" font-family="Inter, Arial, sans-serif" font-size="48" font-weight="600" letter-spacing="-4" text-anchor="middle">TS</text>
+  <text x="64" y="103" fill="#171717" font-family="Inter, Arial, sans-serif" font-size="42" font-weight="600" letter-spacing="-3" text-anchor="middle">LLM</text>
+</svg>
