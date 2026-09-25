@@ -1,13 +1,7 @@
 FROM python:3.11-slim
 
 # — Build-time arguments —
-ARG TL_PACKAGES="\
-  amsmath amssymb babel-english booktabs caption colortbl enumitem \  
-  fancyhdr float fontspec framed geometry graphics hyperref listings \  
-  longtable microtype multirow pdflscape rotating setspace subcaption \  
-  tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval \  
-  collection-fontsrecommended collection-latexrecommended \  
-"
+ARG TL_PACKAGES="amsmath amssymb babel-english booktabs caption colortbl enumitem fancyhdr float fontspec framed geometry graphics hyperref listings longtable microtype multirow pdflscape rotating setspace subcaption tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval collection-fontsrecommended collection-latexrecommended"
 ARG PANDOC_VERSION=3.2
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -57,8 +51,10 @@ COPY src ./src
 COPY templates ./templates
 COPY filters ./filters
 COPY fonts ./fonts
+COPY web ./web
+COPY run_local.py ./
 
 
 # — Expose & Run —
 EXPOSE 8000
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "run_local.py"]

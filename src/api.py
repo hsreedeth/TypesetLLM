@@ -10,7 +10,9 @@ once + we never read the body twice.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import os
 import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -32,6 +34,21 @@ except ModuleNotFoundError:  # pragma: no cover - depends on local environment
     get_remote_address = None
 
 app = FastAPI(title="Markdown → PDF API", version="0.5.1")
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    try:
+        value = int(os.environ.get(name, str(default)))
+    except ValueError:
+        logging.warning("Ignoring invalid %s; using %s", name, default)
+        return default
+    return value if value > 0 else default
+
+
+MAX_REQUEST_BYTES: Final[int] = _positive_int_env("MAX_REQUEST_BYTES", 1_048_576)
+MAX_CONCURRENT_CONVERSIONS: Final[int] = _positive_int_env("MAX_CONCURRENT_CONVERSIONS", 1)
+ALLOW_RAW_TEX: Final[bool] = os.environ.get("ALLOW_RAW_TEX", "false").lower() in {"1", "true", "yes"}
+_conversion_slots = asyncio.Semaphore(MAX_CONCURRENT_CONVERSIONS)
 
 def _no_limit(func: Callable[..., Any]) -> Callable[..., Any]:
     return func
@@ -85,6 +102,24 @@ async def _extract_payload(request: Request) -> Tuple[str, str]:
       - Raw body: send markdown as-is (curl --data-binary @file.md)
     """
 
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            if int(content_length) > MAX_REQUEST_BYTES:
+                raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Request body too large.")
+        except ValueError:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid Content-Length header.")
+
+    chunks: list[bytes] = []
+    received = 0
+    async for chunk in request.stream():
+        received += len(chunk)
+        if received > MAX_REQUEST_BYTES:
+            raise HTTPException(status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Request body too large.")
+        chunks.append(chunk)
+    # Starlette's JSON and form parsers can safely reuse this bounded body.
+    request._body = b"".join(chunks)  # type: ignore[attr-defined]
+
     ct = request.headers.get("content-type", "").lower()
     markdown_text = None
     theme = "vintage"
@@ -92,9 +127,9 @@ async def _extract_payload(request: Request) -> Tuple[str, str]:
     if ct.startswith("application/json"):
         # request.json() consumes the body stream; call it once and only here
         try:
-            body: Any = await request.json()
-        except Exception:
-            body = None
+            body: Any = json.loads(request._body)  # type: ignore[attr-defined]
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid JSON body.")
         if isinstance(body, dict):
             markdown_text = body.get("markdown_text") or body.get("text")
             theme = body.get("theme", theme)
@@ -144,7 +179,7 @@ async def health() -> dict[str, str]:  # noqa: D401
 
 @app.post("/convert", response_class=FileResponse, tags=["conversion"])
 @convert_limit
-async def convert_endpoint(request: Request, background_tasks: BackgroundTasks):  # noqa: D401
+async def convert_endpoint(request: Request):  # noqa: D401
     markdown_text, theme = await _extract_payload(request)
 
     md_clean = _sanitize(markdown_text)
@@ -174,9 +209,14 @@ async def convert_endpoint(request: Request, background_tasks: BackgroundTasks):
     # imports here so the module loads fast and errors are localized to conversion
     from src.cli import DEFAULT_MARKDOWN_FORMAT, convert as _convert_md_to_pdf
 
+    markdown_format = DEFAULT_MARKDOWN_FORMAT
+    if not ALLOW_RAW_TEX:
+        markdown_format = markdown_format.replace("+raw_tex", "-raw_tex")
+
     try:
-        # run the blocking conversion off the event loop
-        await asyncio.to_thread(_convert_md_to_pdf, md_path, pdf_path, DEFAULT_MARKDOWN_FORMAT, tpl_path)
+        # Keep CPU- and memory-heavy TeX processes bounded on small instances.
+        async with _conversion_slots:
+            await asyncio.to_thread(_convert_md_to_pdf, md_path, pdf_path, markdown_format, tpl_path)
 
         # cheap sanity check; empty output usually means a LaTeX/pandoc failure upstream
         if pdf_path.stat().st_size == 0:
@@ -188,7 +228,13 @@ async def convert_endpoint(request: Request, background_tasks: BackgroundTasks):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not generate PDF.")
 
     # FileResponse streams the file; cleanup has to happen after the response is sent
+    background_tasks = BackgroundTasks()
     background_tasks.add_task(md_path.unlink, missing_ok=True)
     background_tasks.add_task(pdf_path.unlink, missing_ok=True)
 
-    return FileResponse(path=str(pdf_path), media_type="application/pdf", filename="converted_document.pdf")
+    return FileResponse(
+        path=str(pdf_path),
+        media_type="application/pdf",
+        filename="converted_document.pdf",
+        background=background_tasks,
+    )

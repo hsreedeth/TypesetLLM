@@ -133,3 +133,25 @@ async def test_missing_markdown_field(client: AsyncClient):
         data={"theme": "vintage"},
     )
     assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+
+@pytest.mark.asyncio
+async def test_oversized_payload_rejected(client: AsyncClient):
+    from src.api import MAX_REQUEST_BYTES
+
+    resp = await client.post(
+        "/convert",
+        content=b"x" * (MAX_REQUEST_BYTES + 1),
+        headers={"content-type": "text/plain"},
+    )
+    assert resp.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+
+
+@pytest.mark.asyncio
+async def test_invalid_json_rejected(client: AsyncClient):
+    resp = await client.post(
+        "/convert",
+        content=b"{not-json}",
+        headers={"content-type": "application/json"},
+    )
+    assert resp.status_code == status.HTTP_400_BAD_REQUEST

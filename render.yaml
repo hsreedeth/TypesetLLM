@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: typesetllm
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: MAX_REQUEST_BYTES
+        value: "1048576"
+      - key: MAX_CONCURRENT_CONVERSIONS
+        value: "1"
+      - key: ALLOW_RAW_TEX
+        value: "false"
