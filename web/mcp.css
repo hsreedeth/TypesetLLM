@@ -1,0 +1,32 @@
+/* Styles for /mcp only. Reuses styles.css's tokens (Inter, #242428 text,
+   #85858c secondary, #a1a1a8 borders, 7px radius) so the page matches
+   the rest of the site without touching styles.css. */
+
+.mcp-shell { max-width: 640px; margin: 0 auto; padding: 40px 22px 60px; }
+.mcp-header h1 { margin: 18px 0 0; font-size: 22px; font-weight: 500; letter-spacing: -.025em; }
+.mcp-back { color: #85858c; font-size: 13px; text-decoration: none; }
+.mcp-back:hover { color: #242428; }
+.mcp-lede { max-width: 460px; margin-top: 10px; font-size: 13px; }
+.mcp-github-button { display: inline-block; width: auto; margin-top: 18px; padding: 9px 16px; border: 1px solid #a1a1a8; border-radius: 7px; text-decoration: none; color: #242428; }
+.mcp-github-button:hover { border-color: #46464d; color: #111; }
+
+.mcp-section { margin-top: 40px; }
+.mcp-section h2 { font-size: 14px; font-weight: 500; margin: 0 0 12px; color: #242428; }
+.mcp-body { font-size: 13px; color: #55555c; line-height: 1.5; margin: 0 0 10px; }
+.mcp-body code { font-size: 12px; }
+
+.mcp-code { margin: 0; padding: 16px 18px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fafafa; overflow-x: auto; }
+.mcp-code code { font-family: "SF Mono", "Menlo", "Consolas", monospace; font-size: 12.5px; line-height: 1.6; color: #242428; }
+
+.mcp-tool-list { font-size: 13px; }
+.mcp-tool-list dt { font-weight: 500; margin-top: 14px; }
+.mcp-tool-list dt code { font-size: 13px; }
+.mcp-tool-list dd { margin: 4px 0 0; color: #55555c; line-height: 1.5; }
+
+.mcp-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mcp-table th, .mcp-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e4e4e7; }
+.mcp-table th { color: #85858c; font-weight: 500; }
+
+.mcp-footer { margin-top: 60px; justify-self: start; }
+
+@media (max-width: 460px) { .mcp-shell { padding: 28px 18px 48px; } }

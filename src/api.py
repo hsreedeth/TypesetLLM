@@ -197,6 +197,16 @@ async def index() -> FileResponse:
     return FileResponse(INDEX_HTML, media_type="text/html")
 
 
+MCP_HTML: Final[Path] = WEB_DIR / "mcp.html"
+
+
+@app.get("/mcp", include_in_schema=False)
+async def mcp_page() -> FileResponse:
+    if not MCP_HTML.is_file():
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="MCP page missing on server.")
+    return FileResponse(MCP_HTML, media_type="text/html")
+
+
 @app.get("/health", tags=["meta"])
 async def health() -> dict[str, str]:  # noqa: D401
     # liveness probe (don't overthink it)
