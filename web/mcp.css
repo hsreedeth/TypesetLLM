@@ -28,6 +28,8 @@
 .mcp-table th, .mcp-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e4e4e7; }
 .mcp-table th { color: #85858c; font-weight: 500; }
 
+.mcp-demo-video { display: block; width: 100%; height: auto; border: 1px solid #a1a1a8; border-radius: 7px; background: #000; }
+
 .mcp-footer { margin-top: 60px; justify-self: start; }
 
 @media (max-width: 460px) { .mcp-shell { padding: 28px 18px 48px; } }
