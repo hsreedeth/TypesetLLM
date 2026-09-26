@@ -165,6 +165,7 @@ function startBrandCycle(delay = 10000) {
 const brandingSlideCount = brandingSlides.children.length;
 let activeBrandingSlide = 0;
 let brandingScrollFrame = 0;
+let brandingScrollSettleTimer = 0;
 let brandingAutoTimer = 0;
 let introFallbackTimer = 0;
 let brandingInteracted = false;
@@ -195,6 +196,7 @@ function closeBranding() {
   window.clearTimeout(brandingAutoTimer);
   window.clearTimeout(introFallbackTimer);
   window.clearTimeout(wheelResetTimer);
+  window.clearTimeout(brandingScrollSettleTimer);
   downwardWheelDistance = 0;
   brandingTouchStart = null;
   introVideo.pause();
@@ -216,7 +218,9 @@ function openBrandingSlides() {
   brandingTouchStart = null;
   introVideo.pause();
   brandingVideo.pause();
+  brandingVideo.parentElement.classList.remove('is-playing');
   brandingVideo.currentTime = 0;
+  brandingVideo.load();
   brandingInteracted = false;
   brandingReturnFocus = watchSlidesButton;
   brandingOverlay.classList.remove('intro-only');
@@ -235,18 +239,24 @@ function updateBrandingSlide() {
   const index = Math.max(0, Math.min(brandingSlideCount - 1, Math.round(brandingSlides.scrollLeft / brandingSlides.clientWidth)));
   if (index !== activeBrandingSlide) {
     activeBrandingSlide = index;
-    if (index === brandingSlideCount - 1 && !reducedMotion) {
-      brandingVideo.currentTime = 0;
-      brandingVideo.play().catch(() => {});
-    } else {
-      brandingVideo.pause();
-    }
+    brandingVideo.pause();
     scheduleBrandingAdvance();
   }
   brandingCount.textContent = `${index + 1} / ${brandingSlideCount}`;
   brandingDots.forEach((dot, dotIndex) => {
     if (dotIndex === index) dot.setAttribute('aria-current', 'true');
     else dot.removeAttribute('aria-current');
+  });
+}
+
+function settleBrandingSlide() {
+  if (brandingOverlay.hidden || brandingOverlay.classList.contains('intro-only')) return;
+  updateBrandingSlide();
+  if (activeBrandingSlide !== brandingSlideCount - 1 || reducedMotion) return;
+  brandingVideo.parentElement.classList.remove('is-playing');
+  brandingVideo.currentTime = 0;
+  brandingVideo.play().catch(() => {
+    // The poster remains visible if a mobile browser still requires a gesture.
   });
 }
 
@@ -290,6 +300,12 @@ brandingOverlay.addEventListener('touchcancel', () => { brandingTouchStart = nul
 brandingSlides.addEventListener('scroll', () => {
   window.cancelAnimationFrame(brandingScrollFrame);
   brandingScrollFrame = window.requestAnimationFrame(updateBrandingSlide);
+  window.clearTimeout(brandingScrollSettleTimer);
+  brandingScrollSettleTimer = window.setTimeout(settleBrandingSlide, 140);
+});
+brandingSlides.addEventListener('scrollend', () => {
+  window.clearTimeout(brandingScrollSettleTimer);
+  settleBrandingSlide();
 });
 brandingSlides.addEventListener('keydown', (event) => {
   if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
@@ -302,7 +318,14 @@ brandingDots.forEach((dot, index) => dot.addEventListener('click', () => {
   goToBrandingSlide(index);
 }));
 brandingVideo.addEventListener('ended', closeBranding);
+brandingVideo.addEventListener('playing', () => {
+  brandingVideo.parentElement.classList.add('is-playing');
+});
+brandingVideo.addEventListener('error', () => {
+  brandingVideo.parentElement.classList.remove('is-playing');
+});
 brandingVideo.addEventListener('click', () => {
+  brandingVideo.parentElement.classList.remove('is-playing');
   brandingVideo.currentTime = 0;
   brandingVideo.play().catch(() => {});
 });
