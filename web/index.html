@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TypesetLLM — Markdown to PDF</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-    <link rel="stylesheet" href="/static/styles.css?v=intro4" />
+    <link rel="stylesheet" href="/static/styles.css?v=phone5" />
   </head>
   <body class="branding-open">
     <main id="page-shell" class="page-shell" inert>
@@ -37,17 +37,16 @@
     </main>
     <div id="branding-overlay" class="branding-overlay intro-only" role="dialog" aria-modal="true" aria-labelledby="branding-dialog-title">
       <h2 id="branding-dialog-title" class="sr-only">Introducing TypesetLLM</h2>
+      <p id="branding-dialog-help" class="sr-only">Swipe down to close the slideshow on a touch screen, scroll down with a mouse, or press Escape.</p>
       <div class="branding-intro"><video id="intro-video" src="/static/branding/branding-4.mp4?v=desktop2" poster="/static/branding/branding-4-start.png?v=desktop2" muted playsinline preload="auto" aria-label="Animated TypesetLLM introduction"></video></div>
       <section class="branding-carousel">
-        <button id="branding-close" class="branding-close" type="button" aria-label="Close introduction">×</button>
-        <div id="branding-slides" class="branding-slides" tabindex="0" aria-label="Swipe to view four branding slides">
-          <div class="branding-slide"><img src="/static/branding/branding-1.png?v=desktop2" alt="TypesetLLM report typography on a cream background" /></div>
-          <div class="branding-slide"><img src="/static/branding/branding-2.png?v=desktop2" alt="A red TypesetLLM slide showing a formatted report table" /></div>
-          <div class="branding-slide"><img src="/static/branding/branding-3.png?v=desktop2" alt="An orange TypesetLLM slide showing highlighted code" /></div>
+        <div id="branding-slides" class="branding-slides" tabindex="0" aria-label="Swipe to view four branding slides" aria-describedby="branding-dialog-help">
+          <div class="branding-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-1.png?v=phone5" /><img src="/static/branding/branding-1.png?v=desktop2" alt="TypesetLLM report typography on a cream background" /></picture></div>
+          <div class="branding-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-2.png?v=phone5" /><img src="/static/branding/branding-2.png?v=desktop2" alt="A red TypesetLLM slide showing a formatted report table" /></picture></div>
+          <div class="branding-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-3.png?v=phone5" /><img src="/static/branding/branding-3.png?v=desktop2" alt="An orange TypesetLLM slide showing highlighted code" /></picture></div>
           <div class="branding-slide"><video id="branding-video" src="/static/branding/branding-4.mp4?v=desktop2" poster="/static/branding/branding-4-start.png?v=desktop2" muted playsinline preload="auto" aria-label="Animated TypesetLLM branding finale"></video></div>
         </div>
         <div class="branding-navigation">
-          <button id="branding-previous" type="button" aria-label="Previous branding slide">←</button>
           <div id="branding-dots" class="branding-dots" role="group" aria-label="Choose branding slide">
             <button type="button" aria-label="Slide 1" aria-current="true"></button>
             <button type="button" aria-label="Slide 2"></button>
@@ -55,10 +54,9 @@
             <button type="button" aria-label="Slide 4"></button>
           </div>
           <span id="branding-count" class="sr-only" aria-live="polite">1 / 4</span>
-          <button id="branding-next" type="button" aria-label="Next branding slide">→</button>
         </div>
       </section>
     </div>
-    <script src="/static/app.js?v=intro3"></script>
+    <script src="/static/app.js?v=phone5"></script>
   </body>
 </html>
