@@ -8,7 +8,7 @@ To regenerate it locally, run `npm ci` and `npm run render` in this directory.
 Remotion downloads Chrome Headless Shell on first use. If that download is not
 available, run the render command with a local `--browser-executable` path.
 
-The clip is 1628 × 1584 at 60 fps for 3.8 seconds. It begins with
+The clip is 2160 × 1536 at 60 fps for 3.8 seconds, matching the new image slides. It begins with
 TypesetChatGPT, keeps `Typeset` fixed while Claude, Gemini, Kimi.ai and
 DeepSeek each receive one readable pass, runs through one short rapid roll,
 then decelerates and holds on `TypesetLLM`. There is no per-name opacity

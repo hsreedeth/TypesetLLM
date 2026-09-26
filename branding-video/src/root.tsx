@@ -8,7 +8,7 @@ export const Root: React.FC = () => (
     component={BrandingCycle}
     durationInFrames={228}
     fps={60}
-    width={1628}
-    height={1584}
+    width={2160}
+    height={1536}
   />
 );

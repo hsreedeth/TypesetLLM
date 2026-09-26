@@ -83,7 +83,7 @@ export const BrandingCycle: React.FC = () => {
 
   return (
     <AbsoluteFill style={{backgroundColor: '#fcf8f4', justifyContent: 'center', alignItems: 'center'}}>
-      <div style={{position: 'absolute', left: '25%', top: '46%', height: 180, fontFamily: 'Inter Brand, sans-serif', fontSize: 128, fontWeight: 400, letterSpacing: '-0.035em', whiteSpace: 'nowrap', color: '#0b0b0b'}}>
+      <div style={{position: 'absolute', left: '34%', top: '46%', height: 180, fontFamily: 'Inter Brand, sans-serif', fontSize: 128, fontWeight: 400, letterSpacing: '-0.035em', whiteSpace: 'nowrap', color: '#0b0b0b'}}>
         <div style={{position: 'absolute', left: 0, top: 0}}>Typeset</div>
         <div style={{position: 'absolute', left: 405, top: -70, width: 850, height: 300, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)'}}>
           {wordTimeline.map(({name}, index) => {

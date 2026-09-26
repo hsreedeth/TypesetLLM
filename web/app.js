@@ -17,6 +17,7 @@ const brandingVideo = document.getElementById('branding-video');
 const brandingPrevious = document.getElementById('branding-previous');
 const brandingNext = document.getElementById('branding-next');
 const brandingCount = document.getElementById('branding-count');
+const brandingDots = [...document.querySelectorAll('#branding-dots button')];
 const brandingOverlay = document.getElementById('branding-overlay');
 const brandingClose = document.getElementById('branding-close');
 const pageShell = document.getElementById('page-shell');
@@ -157,7 +158,7 @@ function startBrandCycle(delay = 10000) {
     const names = ['ChatGPT', 'Claude', 'Gemini', 'Kimi.ai', 'DeepSeek', 'LLM'];
     names.forEach((name, index) => window.setTimeout(() => animateSuffix(name), index * 2500));
     window.setTimeout(() => {
-      startBrandCycle(15000);
+      startBrandCycle(3000);
     }, names.length * 2500);
   }, delay);
 }
@@ -169,7 +170,7 @@ let brandingAutoTimer = 0;
 let brandingInteracted = false;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-if (reducedMotion) brandingVideo.poster = '/static/branding/branding-4-poster.png';
+if (reducedMotion) brandingVideo.poster = '/static/branding/branding-4-poster.png?v=desktop2';
 
 function stopBrandingAutoplay() {
   brandingInteracted = true;
@@ -188,7 +189,7 @@ function closeBranding() {
   brandingOverlay.hidden = true;
   document.body.classList.remove('branding-open');
   pageShell.inert = false;
-  textarea.focus();
+  heading.focus({ preventScroll: true });
 }
 
 function updateBrandingSlide() {
@@ -204,6 +205,10 @@ function updateBrandingSlide() {
     scheduleBrandingAdvance();
   }
   brandingCount.textContent = `${index + 1} / ${brandingSlideCount}`;
+  brandingDots.forEach((dot, dotIndex) => {
+    if (dotIndex === index) dot.setAttribute('aria-current', 'true');
+    else dot.removeAttribute('aria-current');
+  });
   brandingPrevious.disabled = index === 0;
   brandingNext.disabled = index === brandingSlideCount - 1;
 }
@@ -231,6 +236,11 @@ brandingSlides.addEventListener('keydown', (event) => {
 });
 brandingPrevious.addEventListener('click', () => { stopBrandingAutoplay(); goToBrandingSlide(activeBrandingSlide - 1); });
 brandingNext.addEventListener('click', () => { stopBrandingAutoplay(); goToBrandingSlide(activeBrandingSlide + 1); });
+brandingDots.forEach((dot, index) => dot.addEventListener('click', () => {
+  stopBrandingAutoplay();
+  goToBrandingSlide(index);
+}));
+brandingVideo.addEventListener('ended', closeBranding);
 brandingVideo.addEventListener('click', () => {
   brandingVideo.currentTime = 0;
   brandingVideo.play().catch(() => {});
@@ -239,7 +249,7 @@ document.addEventListener('keydown', (event) => {
   if (brandingOverlay.hidden) return;
   if (event.key === 'Escape') { closeBranding(); return; }
   if (event.key !== 'Tab') return;
-  const focusables = [brandingClose, brandingSlides, brandingPrevious, brandingNext];
+  const focusables = [brandingClose, brandingSlides, brandingPrevious, ...brandingDots, brandingNext];
   const current = focusables.indexOf(document.activeElement);
   if (event.shiftKey && current === 0) { event.preventDefault(); brandingNext.focus(); }
   if (!event.shiftKey && current === focusables.length - 1) { event.preventDefault(); brandingClose.focus(); }
