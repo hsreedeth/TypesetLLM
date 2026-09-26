@@ -74,5 +74,10 @@ button, textarea { font: inherit; }
 @keyframes pulse { to { opacity: .25; } }
 @media (max-width: 1400px) { .page-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; gap: 22px; } .brand-block { grid-column: 1; grid-row: 1; } .brand-description { max-width: 330px; } .workspace { grid-column: 1; grid-row: 2; margin-top: 10px; } .footer-note { grid-row: 3; } }
 @media (max-width: 750px) { .page-shell { padding: 22px; } .controls-row { flex-wrap: wrap; } .upload-button, .controls-panel { width: 100%; } .markdown-input { font-size: 16px; } }
+@media (max-width: 600px) and (orientation: portrait) {
+  .branding-code-slide img { object-position: center top; }
+  .branding-video-slide { background-color: #faf8f4; background-size: contain; background-repeat: no-repeat; }
+  .branding-video-slide video { object-fit: contain; }
+}
 @media (max-width: 460px) { .markdown-input { min-height: 260px; } }
 @media (prefers-reduced-motion: reduce) { .brand-suffix.exit, .brand-suffix.enter, .loading-indicator span { animation: none; } }
