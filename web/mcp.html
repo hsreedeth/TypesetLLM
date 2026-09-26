@@ -14,7 +14,7 @@
         <a class="mcp-back" href="/">← TypesetLLM</a>
         <h1>Typeset<span class="brand-suffix">LLM</span> · MCP</h1>
         <p class="brand-description mcp-lede">
-          Call TypesetLLM as a tool from Claude, or any other MCP client, instead of pasting
+          Call TypesetLLM as a tool from Claude Code, Codex CLI, or any other MCP client, instead of pasting
           Markdown into the browser. One tool renders a PDF and saves it locally; a second
           checks whether the renderer is warmed up.
         </p>
@@ -31,9 +31,12 @@ python -m venv .venv
 pip install -r requirements.txt</code></pre>
       </section>
 
-      <section class="mcp-section" aria-labelledby="mcp-claude-code-heading">
-        <h2 id="mcp-claude-code-heading">Add to Claude Code</h2>
+      <section class="mcp-section" aria-labelledby="mcp-cli-heading">
+        <h2 id="mcp-cli-heading">Add to Claude Code and Codex CLI</h2>
+        <p class="mcp-body">Claude Code</p>
         <pre class="mcp-code"><code>claude mcp add typesetllm -- python /absolute/path/to/mcp/server.py</code></pre>
+        <p class="mcp-body mcp-client-label">Codex CLI</p>
+        <pre class="mcp-code"><code>codex mcp add typesetllm -- python /absolute/path/to/mcp/server.py</code></pre>
       </section>
 
       <section class="mcp-section" aria-labelledby="mcp-desktop-heading">

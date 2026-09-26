@@ -14,6 +14,7 @@
 .mcp-section h2 { font-size: 14px; font-weight: 500; margin: 0 0 12px; color: #242428; }
 .mcp-body { font-size: 13px; color: #55555c; line-height: 1.5; margin: 0 0 10px; }
 .mcp-body code { font-size: 12px; }
+.mcp-client-label { margin-top: 18px; }
 
 .mcp-code { margin: 0; padding: 16px 18px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fafafa; overflow-x: auto; }
 .mcp-code code { font-family: "SF Mono", "Menlo", "Consolas", monospace; font-size: 12.5px; line-height: 1.6; color: #242428; }

@@ -153,6 +153,21 @@ async def test_raw_tex_disabled(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_labeled_bidirectional_arrows_with_raw_tex_disabled(client: AsyncClient):
+    """Supported math commands render through the public API's normal safe path."""
+    from src.api import ALLOW_RAW_TEX
+
+    assert ALLOW_RAW_TEX is False
+    resp = await client.post(
+        "/convert",
+        json={"markdown_text": "# Weighted graph\n\n$$1 \\xleftrightarrow{2} 2$$"},
+    )
+    assert resp.status_code == status.HTTP_200_OK, resp.text
+    assert resp.headers["content-type"].startswith("application/pdf")
+    assert resp.content.startswith(b"%PDF-")
+
+
+@pytest.mark.asyncio
 async def test_literal_tex_in_code_is_preserved(client: AsyncClient):
     resp = await client.post(
         "/convert",
