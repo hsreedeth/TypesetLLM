@@ -11,6 +11,9 @@ button, textarea { font: inherit; }
 .brand-suffix.exit { animation: suffix-exit .35s ease-in forwards; }
 .brand-suffix.enter { animation: suffix-enter .4s ease-out both; }
 .brand-description { margin: 8px 0 0; max-width: 210px; color: #85858c; font-size: 13px; line-height: 1.22; font-weight: 300; }
+.watch-slides-button { margin-top: 16px; padding: 8px 12px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fff; color: #242428; font-size: 13px; font-weight: 300; cursor: pointer; }
+.watch-slides-button:hover { border-color: #46464d; color: #111; }
+.watch-slides-button:focus-visible { outline: 2px solid #51515a; outline-offset: 2px; }
 .workspace { grid-column: 1 / -1; grid-row: 1; width: min(100%,810px); justify-self: center; align-self: start; margin-top: clamp(60px,10vh,105px); }
 .markdown-input { display: block; width: 100%; height: 280px; resize: vertical; border: 1px solid #a1a1a8; border-radius: 7px; outline: none; padding: 24px 26px; color: #242428; background: #fff; font-size: 13px; line-height: 1.55; font-weight: 300; }
 .markdown-input:focus-visible, .control-button:focus-visible, .action-button:focus-visible { outline: 2px solid #51515a; outline-offset: 2px; }
@@ -42,6 +45,10 @@ button, textarea { font: inherit; }
 .pdf-preview.visible { display: block; }
 .branding-overlay { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; background: rgba(77,79,85,.50); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 .branding-overlay[hidden] { display: none; }
+.branding-intro { display: none; width: 100vw; height: 100dvh; }
+.branding-intro video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.branding-overlay.intro-only .branding-intro { display: block; }
+.branding-overlay.intro-only .branding-carousel { display: none; }
 .branding-carousel { position: relative; width: 100vw; height: 100dvh; }
 .branding-close { position: absolute; z-index: 2; right: 22px; top: 18px; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(0,0,0,.45); color: #fff; font: inherit; font-size: 26px; font-weight: 300; line-height: 1; cursor: pointer; }
 .branding-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }

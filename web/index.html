@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TypesetLLM — Markdown to PDF</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-    <link rel="stylesheet" href="/static/styles.css?v=desktop2" />
+    <link rel="stylesheet" href="/static/styles.css?v=intro3" />
   </head>
   <body class="branding-open">
     <main id="page-shell" class="page-shell" inert>
       <header class="brand-block">
         <h1 id="brand-heading" tabindex="-1" aria-label="TypesetLLM">Typeset<span id="brand-suffix" class="brand-suffix" aria-hidden="true">LLM</span></h1>
         <p class="brand-description">Have you ever tried turning an LLM-generated report into a PDF, only to spend ages fixing the tables, equations and code?<br />Me too. So I built TypesetLLM.<br />Drop in your Markdown. Get a polished PDF.</p>
+        <button id="watch-slides-button" class="watch-slides-button" type="button">watch the slide</button>
       </header>
       <section class="workspace" aria-label="Markdown converter">
         <label class="sr-only" for="markdown-input">Markdown input</label>
@@ -34,9 +35,10 @@
       </section>
       <footer class="footer-note"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
     </main>
-    <div id="branding-overlay" class="branding-overlay" role="dialog" aria-modal="true" aria-labelledby="branding-dialog-title">
+    <div id="branding-overlay" class="branding-overlay intro-only" role="dialog" aria-modal="true" aria-labelledby="branding-dialog-title">
+      <h2 id="branding-dialog-title" class="sr-only">Introducing TypesetLLM</h2>
+      <div class="branding-intro"><video id="intro-video" src="/static/branding/branding-4.mp4?v=desktop2" poster="/static/branding/branding-4-start.png?v=desktop2" muted playsinline preload="auto" aria-label="Animated TypesetLLM introduction"></video></div>
       <section class="branding-carousel">
-        <h2 id="branding-dialog-title" class="sr-only">Introducing TypesetLLM</h2>
         <button id="branding-close" class="branding-close" type="button" aria-label="Close introduction">×</button>
         <div id="branding-slides" class="branding-slides" tabindex="0" aria-label="Swipe to view four branding slides">
           <div class="branding-slide"><img src="/static/branding/branding-1.png?v=desktop2" alt="TypesetLLM report typography on a cream background" /></div>
@@ -57,6 +59,6 @@
         </div>
       </section>
     </div>
-    <script src="/static/app.js?v=desktop2"></script>
+    <script src="/static/app.js?v=intro3"></script>
   </body>
 </html>
