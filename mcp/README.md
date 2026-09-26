@@ -4,8 +4,6 @@ A minimal MCP server that wraps the [TypesetLLM](https://github.com/hsreedeth/Ty
 `/convert` endpoint, so any MCP client can turn Markdown into a typeset PDF
 as a tool call.
 
-It talks to your deployed instance (default: `https://typesetllm.onrender.com`)
-over plain HTTP — no changes to TypesetLLM itself are needed.
 
 ## Install
 
@@ -22,8 +20,6 @@ pip install -r requirements.txt
 python server.py
 ```
 
-It will sit waiting on stdio — that's expected, it's meant to be launched
-by an MCP client, not run standalone.
 
 ## Add to Claude Code
 
