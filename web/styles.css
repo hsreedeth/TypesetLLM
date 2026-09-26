@@ -1,5 +1,5 @@
 @font-face { font-family: Inter; src: url('/fonts/Inter-Variable.ttf') format('truetype'); font-weight: 100 900; font-display: swap; }
-:root { font-family: Inter, sans-serif; font-weight: 300; color: #242428; background: #f1ece6; }
+:root { font-family: Inter, sans-serif; font-weight: 300; color: #242428; background: #fff; }
 * { box-sizing: border-box; }
 html, body { min-height: 100%; margin: 0; }
 body.branding-open { overflow: hidden; }
