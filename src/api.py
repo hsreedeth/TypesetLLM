@@ -72,8 +72,10 @@ def _no_limit(func: Callable[..., Any]) -> Callable[..., Any]:
 
 
 if Limiter is not None and get_remote_address is not None and SlowAPIMiddleware is not None:
-    # simple rate limit so someone can't spam LaTeX and pin the CPU
-    limiter = Limiter(key_func=get_remote_address, default_limits=["60/hour"])
+    # Only the expensive conversion endpoint is rate limited. Render probes
+    # /ready every few seconds, so a global limit would eventually mark every
+    # healthy instance unavailable.
+    limiter = Limiter(key_func=get_remote_address)
     app.state.limiter = limiter
     app.add_middleware(SlowAPIMiddleware)
     convert_limit = limiter.limit("60/hour")

@@ -2,7 +2,7 @@ services:
   - type: web
     name: typesetllm
     runtime: docker
-    plan: free
+    plan: 0.5c-512mb
     healthCheckPath: /ready
     envVars:
       - key: MAX_REQUEST_BYTES

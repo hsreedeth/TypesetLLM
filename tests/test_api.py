@@ -46,6 +46,19 @@ async def test_renderer_readiness_is_a_real_render(client: AsyncClient):
     assert response.json()["pandoc"].startswith("pandoc")
 
 
+@pytest.mark.asyncio
+async def test_renderer_readiness_is_not_rate_limited(client: AsyncClient):
+    """Render health probes must never exhaust the conversion rate limit."""
+    previous = app.state.renderer_readiness
+    app.state.renderer_readiness = {"status": "ready", "pandoc": "pandoc test"}
+    try:
+        responses = [await client.get("/ready") for _ in range(65)]
+    finally:
+        app.state.renderer_readiness = previous
+
+    assert all(response.status_code == status.HTTP_200_OK for response in responses)
+
+
 # -------------------------------------------------------------------- ##
 @pytest.mark.asyncio
 async def test_convert_form_success(client: AsyncClient):
