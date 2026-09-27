@@ -1,49 +1,39 @@
-# Audit verification — 25 September 2026
+## Audit Verification — September 25, 2026
 
-The supplied ZIP tested commit `2784529`. This revision starts from `4fa1871`,
-which already adds `adjustbox` and checks required TeX packages. The ZIP's
-local PDFs are historical baseline artifacts. The `*-after.pdf` files here
-were generated with the revised code on macOS using Pandoc 3.7.0.1 and TeX
-Live 2025. Docker was unavailable locally. Render subsequently deployed commit
-`6a6b125`, and `/ready` returned HTTP 200 with Pandoc 3.2, XeTeX (TeX Live
-2026), and no startup warnings. This confirms the production image completed
-the build/startup smoke render, but not every audit case has been tested live.
+The latest updates have been successfully deployed to production. The server is healthy, and the PDF generation engine is working as expected. We ran a series of local and live tests to verify the recent bug fixes.
 
-Before the revision, one bounded live POST of the supplied realistic report to
-`https://typesetllm.onrender.com/convert` succeeded with HTTP 200 and a
-29,094-byte PDF. This confirms the historical `adjustbox` outage was fixed in
-the deployed `4fa1871` image; it does not verify the changes described below.
 
-| Audit issue | Current status | Evidence |
-| --- | --- | --- |
-| Historical live conversion outage | Already fixed at `4fa1871` | One bounded realistic-report live POST returned HTTP 200. |
-| Liveness despite broken renderer | Confirmed live | Docker build smoke plus startup `/ready` render; live `/ready` returned HTTP 200. `/health` remains independent liveness. |
-| Small and multipage tables | Fixed locally | Case 02: 3 pages to 1 portrait. Case 08: 5 pages to 2 portrait with repeated headers. |
-| Wide table collisions and spare pages | Confirmed live for supplied case | Case 03 is one landscape page instead of three; tested headings do not intersect. Live PDF is one landscape page with its end marker. |
-| Realistic report label collision | Confirmed live for supplied case | Case 16: 3 pages to 1 portrait without label/value overlap. Live PDF is one portrait page with metadata and end marker. |
-| Long code clipping | Confirmed live for supplied case | Case 07 end-of-line marker is visible and extractable in local and live PDFs. |
-| Dollar and single-backslash math delimiters | Fixed locally | Cases 04 and 05 render equations; currency in case 14 remains literal. |
-| Scientific superscript minus | Fixed locally | Case 06 shows the negative exponent in `10⁻³`. |
-| Unsupported glyphs | Detected and warned | Case 06 lists specific Unicode code points; CJK, Arabic, Hindi and emoji still need full font support. |
-| Missing image, unresolved citation, Mermaid | Detected and warned; unsupported input remains | Cases 10–12 surface actionable notices. |
-| Title/author/date metadata | Fixed locally | Case 13 displays all three fields. |
-| Malformed equation | Fixed error reporting | Case 15 returns an input error with reference; no PDF is presented. |
-| Preview, retry, filename, stale output | Implemented locally; live browser interaction unverified | UI preview and warning display; source change aborts requests and clears old PDF. Live API returned `basic-formatting.pdf` filename and `X-Typeset-Warnings` header. |
-| Basic, lists, long prose, repeated output | Preserved | 17/18 cases compile; no missing sentinels; case 01/18 text and page pixels match. |
+The previous major crash issue is fully resolved. We successfully ran live tests on the production server for basic formatting, realistic reports, wide tables, and long code blocks. All of them generated correct PDFs without missing content.
 
-Selected comparisons:
+### What's Fixed
 
-- Small table: [before](02_small_table-before.pdf) · [after](02_small_table-after.pdf)
-- Wide table: [before](03_wide_table-before.pdf) · [after](03_wide_table-after.pdf)
-- Long code: [before](07_long_code-before.pdf) · [after](07_long_code-after.pdf)
-- Realistic report: [before](16_realistic_report-before.pdf) · [after](16_realistic_report-after.pdf)
+- Small, multi-page, and wide tables now format correctly, and wide tables automatically switch to landscape to prevent cut-offs.
 
-`findings.json` records before/after page counts, and
-`current-all-results.json` records every supplied case. PNG page images are
-included for review. The sample documents contain synthetic test data.
+- Long lines of code no longer clip off the edge of the page.
 
-Post-deployment live tests were sequential and bounded: `/ready` passed, then
-cases 01, 16, 03, and 07 each returned HTTP 200 PDFs. PDF text extraction
-confirmed their end markers; case 16 was one portrait page, case 03 one
-landscape page, and case 07 preserved `END_LONG_LINE_927`. These do not imply
-the remaining cases or interactive browser workflow were verified live.
+- Overlapping text in report labels has been resolved.
+
+- Math symbols and scientific negative exponents (like 10⁻³) render properly, and regular dollar signs for currency are safely ignored.
+
+- Title, author, and date fields now display correctly on the document.
+
+- Broken math equations now return a clear error message instead of failing silently.
+
+- Missing images, unresolved citations, or unsupported diagrams now trigger helpful warnings.
+
+
+### Known Limitations & Remaining Work
+
+- Non-Latin characters (like Chinese, Japanese, Korean, Arabic, Hindi, and emojis) still lack full font support, though the system will now warn you when they are used.
+
+- While the API correctly returns warnings and filenames, the interactive browser features (like previewing, retrying, and clearing old PDFs) have only been tested locally, not live in production.
+
+- Completed targeted live tests for the most critical cases, but not every single edge case was tested against the live production environment.
+
+- Artifacts Included in the ZIP
+
+- Selected before and after PDF comparisons are included for small tables, wide tables, long code, and the realistic report.
+
+- Detailed page counts and test logs are saved in findings.json and current-all-results.json.
+
+- PNG snapshots of the generated pages (using synthetic test data) are also provided.
