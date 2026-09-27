@@ -176,8 +176,8 @@ let wheelResetTimer = 0;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 if (reducedMotion) {
-  brandingVideo.poster = '/static/branding/branding-4-poster.png?v=desktop2';
-  introVideo.poster = '/static/branding/branding-4-poster.png?v=desktop2';
+  brandingVideo.poster = '/static/branding/mcp-demo-poster.png';
+  introVideo.poster = '/static/branding/mcp-demo-poster.png';
 }
 
 function stopBrandingAutoplay() {

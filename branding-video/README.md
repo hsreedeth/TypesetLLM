@@ -1,20 +1,7 @@
-# Branding finale
+# MCP demo video
 
-The fourth slide is a prerendered Remotion composition. Rendered output is
-checked in at `../web/branding/branding-4.mp4`, so the production Python image
-does not need Node, Chrome or a video-rendering step.
+The 9-second, 1920 × 1080 Remotion composition shows a Codex connection, a conversion request, and a sample PDF with a table, equation, and code block. The checked-in H.264 output is `../web/branding/mcp-demo.mp4`; the Python deployment does not need Node or Chrome.
 
-To regenerate it locally, run `npm ci` and `npm run render` in this directory.
-Remotion downloads Chrome Headless Shell on first use. If that download is not
-available, run the render command with a local `--browser-executable` path.
+Run `npm ci`, then `npm run render` here to regenerate the clip. Pass a suitable `--browser-executable` if Remotion cannot find Chrome. Run `npm run test:motion` for the storyboard check.
 
-The clip is 2160 × 1536 at 60 fps for 3.8 seconds, matching the new image slides. It begins with
-TypesetChatGPT, keeps `Typeset` fixed while Claude, Gemini, Kimi.ai and
-DeepSeek each receive one readable pass, runs through one short rapid roll,
-then decelerates and holds on `TypesetLLM`. There is no per-name opacity
-animation or blur filter; only the slot edges fade gently. Run
-`npm run test:motion` to check
-that the reel never moves backwards or jumps between names. Inter is
-bundled from the repository's licensed font file. The original fourth image is
-retained as `../web/branding/branding-4-poster.png`; the carousel uses a
-rendered first-frame poster so playback does not flash the final title first.
+The preview is illustrative. The actual MCP tool returns a temporary HTTPS download URL, which the client can save in its workspace.

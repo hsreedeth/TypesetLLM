@@ -1,14 +1,4 @@
 import React from 'react';
 import {Composition} from 'remotion';
-import {BrandingCycle} from './scene';
-
-export const Root: React.FC = () => (
-  <Composition
-    id="BrandingCycle"
-    component={BrandingCycle}
-    durationInFrames={228}
-    fps={60}
-    width={2160}
-    height={1536}
-  />
-);
+import {McpDemo} from './scene';
+export const Root: React.FC = () => <Composition id="McpDemo" component={McpDemo} durationInFrames={270} fps={30} width={1920} height={1080}/>;
