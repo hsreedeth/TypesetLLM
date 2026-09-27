@@ -12,7 +12,7 @@ button, textarea { font: inherit; }
 .brand-suffix.exit { animation: suffix-exit .35s ease-in forwards; }
 .brand-suffix.enter { animation: suffix-enter .4s ease-out both; }
 .brand-description { margin: 8px 0 0; max-width: 210px; color: #85858c; font-size: 13px; line-height: 1.22; font-weight: 300; }
-.watch-slides-button { margin-top: 16px; padding: 8px 12px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fff; color: #242428; font-size: 13px; font-weight: 300; cursor: pointer; }
+.watch-slides-button { width: 134px; margin-top: 16px; padding: 8px 12px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fff; color: #242428; font-size: 13px; font-weight: 300; cursor: pointer; }
 .watch-slides-button:hover { border-color: #46464d; color: #111; }
 .watch-slides-button:focus-visible { outline: 2px solid #51515a; outline-offset: 2px; }
 .workspace { grid-column: 1 / -1; grid-row: 1; width: min(100%,810px); justify-self: center; align-self: start; margin-top: clamp(60px,10vh,105px); }
@@ -66,7 +66,7 @@ button, textarea { font: inherit; }
 .branding-dots button { width: 9px; height: 9px; border-radius: 50%; background: #999; }
 .branding-dots button[aria-current="true"] { background: #111; }
 .branding-navigation button:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
-.mcp-link-button { display: block; width: fit-content; margin-top: 9px; padding: 7px 11px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fff; color: #3567b8; font-family: Inter, sans-serif; font-size: 13px; font-weight: 300; line-height: 1; text-decoration: none; }
+.mcp-link-button { display: block; width: 134px; margin-top: 9px; padding: 7px 11px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fff; color: #3567b8; font-family: Inter, sans-serif; font-size: 13px; font-weight: 300; line-height: 1; text-align: center; text-decoration: none; }
 .mcp-link-button:hover { border-color: #3567b8; color: #214f99; }
 .mcp-link-button:focus-visible { outline: 2px solid #51515a; outline-offset: 2px; }
 .footer-note { grid-column: 1 / -1; grid-row: 2; justify-self: center; display: flex; gap: 6px; color: #74747b; font-size: 8px; font-weight: 300; }
