@@ -1,45 +1,110 @@
 import React, {useEffect, useState} from 'react';
-import {AbsoluteFill, continueRender, delayRender, Easing, interpolate, staticFile, useCurrentFrame} from 'remotion';
+import {
+  AbsoluteFill,
+  continueRender,
+  delayRender,
+  staticFile,
+  useCurrentFrame,
+  useVideoConfig,
+} from 'remotion';
 
-const ease = Easing.bezier(.22, 1, .36, 1);
-const tween = (f: number, a: number, b: number, x: number, y: number) => interpolate(f, [a,b], [x,y], {easing: ease, extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-const show = (f: number, at: number) => tween(f, at, at + 15, 0, 1);
-const card: React.CSSProperties = {background:'#fffdf9', border:'2px solid #d9d7d1', borderRadius:24, boxShadow:'0 28px 70px rgba(13,38,92,.12)'};
-const mono: React.CSSProperties = {fontFamily:'Menlo, Consolas, monospace'};
-export const McpDemo: React.FC = () => {
-  const f = useCurrentFrame();
+// Each timestamp is when the next name reaches the fixed title position.
+// The intervals shrink gradually, then grow again; the motion never resets
+// between names, so velocity stays continuous even at the fastest point.
+export const wordTimeline = [
+  {at: 0, name: 'ChatGPT'},
+  {at: 0.43, name: 'Claude'},
+  {at: 0.83, name: 'Gemini'},
+  {at: 1.23, name: 'Kimi.ai'},
+  {at: 1.63, name: 'DeepSeek'},
+  {at: 1.90, name: 'ChatGPT'},
+  {at: 2.05, name: 'Claude'},
+  {at: 2.17, name: 'Gemini'},
+  {at: 2.27, name: 'Kimi.ai'},
+  {at: 2.37, name: 'DeepSeek'},
+  {at: 2.52, name: 'ChatGPT'},
+  {at: 2.73, name: 'Claude'},
+  {at: 3.02, name: 'LLM'},
+] as const;
+
+function slopeAt(index: number): number {
+  if (index === 0 || index === wordTimeline.length - 1) return 0;
+  const previousGap = wordTimeline[index].at - wordTimeline[index - 1].at;
+  const nextGap = wordTimeline[index + 1].at - wordTimeline[index].at;
+  const previousSpeed = 1 / previousGap;
+  const nextSpeed = 1 / nextGap;
+  const weightPrevious = 2 * nextGap + previousGap;
+  const weightNext = nextGap + 2 * previousGap;
+  return (weightPrevious + weightNext) / (weightPrevious / previousSpeed + weightNext / nextSpeed);
+}
+
+export function reelPositionAt(seconds: number): number {
+  const last = wordTimeline.length - 1;
+  if (seconds <= 0) return 0;
+  if (seconds >= wordTimeline[last].at) return last;
+
+  const index = wordTimeline.findIndex((item, next) => next < last && seconds < wordTimeline[next + 1].at);
+  const start = wordTimeline[index].at;
+  const duration = wordTimeline[index + 1].at - start;
+  const t = (seconds - start) / duration;
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const startTangent = duration * slopeAt(index);
+  const endTangent = duration * slopeAt(index + 1);
+  return (2 * t3 - 3 * t2 + 1) * index
+    + (t3 - 2 * t2 + t) * startTangent
+    + (-2 * t3 + 3 * t2) * (index + 1)
+    + (t3 - t2) * endTangent;
+}
+
+export const BrandingCycle: React.FC = () => {
+  const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   const [fontHandle] = useState(() => delayRender('Loading Inter'));
-  useEffect(() => {let active=true; new FontFace('Inter Demo', `url(${staticFile('Inter-Variable.ttf')})`, {weight:'100 900'}).load().then(face => {document.fonts.add(face); if(active) continueRender(fontHandle);}).catch(() => {if(active) continueRender(fontHandle);}); return () => {active=false;};}, [fontHandle]);
-  const x=tween(f,0,95,0,-36)+tween(f,165,245,0,-20), y=tween(f,0,95,0,-9)+tween(f,165,245,0,-10), scale=tween(f,0,95,1,1.045)+tween(f,165,245,0,.02);
-  const outro=interpolate(f,[255,269],[1,0],{extrapolateLeft:'clamp',extrapolateRight:'clamp'});
-  return <AbsoluteFill style={{background:'radial-gradient(circle at 75% 25%, #fff0ca, #f7f6f2 55%)', fontFamily:'Inter Demo, sans-serif', color:'#1c2840', overflow:'hidden'}}>
-    <div style={{opacity:outro*tween(f,0,12,0,1)}}>
-      <div style={{position:'absolute',left:94,top:67,color:'#092c79',fontSize:28,fontWeight:700}}>TypesetLLM <span style={{fontWeight:400}}>· MCP</span></div>
-      <div style={{position:'absolute',right:94,top:73,color:'#687185',fontSize:19}}>Markdown → PDF</div>
-      <div style={{position:'absolute',left:90,right:90,top:130,height:2,background:'#092c79'}}/>
-      <div style={{position:'absolute',left:160,top:210,width:1690,transform:`translate(${x}px,${y}px) scale(${scale})`,transformOrigin:'left top'}}>
-        <div style={{fontSize:48,fontWeight:650,letterSpacing:'-.045em'}}>One command. One prompt. A finished PDF.</div>
-        <div style={{display:'flex',gap:34,marginTop:40}}>
-          <div style={{width:920}}>
-            <div style={{...card,height:240,overflow:'hidden'}}>
-              <div style={{height:54,padding:'16px 24px',background:'#f0eee8',borderBottom:'1px solid #dad8d0',fontSize:19,color:'#657086'}}>Terminal <span style={{float:'right'}}>● ● ●</span></div>
-              <div style={{padding:'28px 30px',fontSize:25,...mono}}><span style={{color:'#588c73'}}>$ </span><span style={{opacity:show(f,18)}}>codex mcp add typesetllm --url</span><br/><span style={{opacity:show(f,26),color:'#092c79'}}>  https://typesetllm.onrender.com/mcp</span></div>
-              <div style={{padding:'0 31px',fontSize:21,color:'#34815b',opacity:show(f,48)}}>✓ TypesetLLM connected</div>
-            </div>
-            <div style={{...card,marginTop:28,height:275,padding:'27px 30px',overflow:'hidden'}}>
-              <div style={{fontSize:20,color:'#6d7786',marginBottom:20}}>Codex</div>
-              <div style={{background:'#f4f4f1',borderRadius:18,padding:'20px 24px',fontSize:24,lineHeight:1.4,opacity:show(f,76),transform:`translateY(${tween(f,76,98,20,0)}px)`}}>Use TypesetLLM to convert <b>report.md</b> into a PDF and save it here.</div>
-              <div style={{marginTop:18,color:'#092c79',fontSize:21,opacity:show(f,119)}}>↗ convert_markdown_to_pdf</div>
-            </div>
-            <div style={{...card,marginTop:28,height:110,padding:'24px 30px',opacity:show(f,162),display:'flex',alignItems:'center',gap:20}}><div style={{background:'#dff2e4',borderRadius:16,padding:'12px 16px',color:'#2d7650',fontWeight:700,fontSize:23}}>✓</div><div><b style={{fontSize:23}}>report.pdf saved</b><div style={{fontSize:18,color:'#6e7786',marginTop:4}}>Rendered on TypesetLLM · downloaded by Codex</div></div></div>
-          </div>
-          <div style={{width:610,height:745,position:'relative'}}>
-            <div style={{...card,position:'absolute',inset:0,padding:'32px 35px',background:'#f3f1eb',opacity:show(f,76)}}><div style={{fontSize:18,color:'#667186',marginBottom:26}}>report.md</div><div style={{fontSize:35,fontWeight:650}}>Quarterly report</div><div style={{width:'85%',height:14,background:'#d7d9d8',marginTop:33,borderRadius:7}}/><div style={{width:'93%',height:14,background:'#d7d9d8',marginTop:17,borderRadius:7}}/><div style={{marginTop:49,fontSize:19,...mono,lineHeight:1.8,color:'#535f73'}}>| Metric | Value |<br/>| Growth | 24% |<br/><br/>$E = mc^2$<br/><br/>```python<br/>print('ready')<br/>```</div></div>
-            <div style={{...card,position:'absolute',inset:0,padding:'36px 43px',background:'white',opacity:show(f,185),transform:`translateY(${tween(f,185,221,46,0)}px)`,boxShadow:'0 35px 80px rgba(13,38,92,.2)'}}><div style={{fontSize:17,color:'#677185',marginBottom:30}}>report.pdf <span style={{float:'right',color:'#2f8158'}}>✓ PDF</span></div><div style={{fontFamily:'Georgia, serif',fontSize:37,fontWeight:700,color:'#9f3025'}}>Quarterly report</div><div style={{height:2,background:'#9f3025',margin:'20px 0 31px'}}/><div style={{fontFamily:'Georgia, serif',fontSize:20,lineHeight:1.45}}>A polished summary of this quarter’s results, with structured data and technical notes.</div><div style={{marginTop:31,fontFamily:'Georgia, serif',fontSize:24,fontWeight:700}}>Performance</div><div style={{marginTop:11,display:'grid',gridTemplateColumns:'1fr 1fr',fontFamily:'Georgia, serif',fontSize:19,borderTop:'2px solid #a32e25',borderBottom:'1px solid #d4c9bd'}}><span style={{padding:13,fontWeight:700}}>Metric</span><span style={{padding:13,fontWeight:700}}>Value</span><span style={{padding:13,borderTop:'1px solid #ddd7cf'}}>Growth</span><span style={{padding:13,borderTop:'1px solid #ddd7cf'}}>24%</span></div><div style={{marginTop:29,textAlign:'center',fontFamily:'Georgia, serif',fontSize:28,fontStyle:'italic'}}>E = mc²</div><div style={{marginTop:30,borderLeft:'4px solid #a32e25',background:'#f5f4f0',padding:'15px 21px',...mono,fontSize:17,color:'#394b5c'}}>print('ready')</div></div>
-          </div>
+
+  useEffect(() => {
+    let active = true;
+    const loadFont = async () => {
+      const face = new FontFace('Inter Brand', `url(${staticFile('Inter-Variable.ttf')})`, {
+        weight: '100 900',
+      });
+      await face.load();
+      document.fonts.add(face);
+      if (active) continueRender(fontHandle);
+    };
+    loadFont().catch((error) => {
+      console.error(error);
+      if (active) continueRender(fontHandle);
+    });
+    return () => { active = false; };
+  }, [fontHandle]);
+
+  const position = reelPositionAt(frame / fps);
+
+  return (
+    <AbsoluteFill style={{backgroundColor: '#fcf8f4', justifyContent: 'center', alignItems: 'center'}}>
+      <div style={{position: 'absolute', left: '34%', top: '46%', height: 180, fontFamily: 'Inter Brand, sans-serif', fontSize: 128, fontWeight: 400, letterSpacing: '-0.035em', whiteSpace: 'nowrap', color: '#0b0b0b'}}>
+        <div style={{position: 'absolute', left: 0, top: 0}}>Typeset</div>
+        <div style={{position: 'absolute', left: 405, top: -70, width: 850, height: 300, overflow: 'hidden', maskImage: 'linear-gradient(to bottom, transparent, black 15%, black 85%, transparent)'}}>
+          {wordTimeline.map(({name}, index) => {
+            const distance = position - index;
+            if (Math.abs(distance) >= 1) return null;
+            return (
+              <div
+                key={index}
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 70,
+                  transform: `translateY(${distance * 170}px)`,
+                }}
+              >
+                {name}
+              </div>
+            );
+          })}
         </div>
       </div>
-      <div style={{position:'absolute',left:92,bottom:42,color:'#6d7786',fontSize:18}}>Connect → ask → download</div>
-    </div>
-  </AbsoluteFill>;
+    </AbsoluteFill>
+  );
 };

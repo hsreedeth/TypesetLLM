@@ -4,8 +4,6 @@
 
 Connect your coding assistant to TypesetLLM and turn Markdown into a PDF. No local setup needed.
 
-[Watch the 9-second demo](https://typesetllm.onrender.com/integrations).
-
 ## Codex
 
 ```sh
