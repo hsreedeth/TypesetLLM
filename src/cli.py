@@ -29,6 +29,7 @@ from dataclasses import dataclass
 import logging
 import os
 import re
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -159,20 +160,24 @@ def convert_with_diagnostics(
     if markdown_format and markdown_format.lower() != "auto":
         command.extend(["-f", markdown_format])
 
+    process = subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        start_new_session=True,
+    )
     try:
-        completed = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=CONVERSION_TIMEOUT_SECONDS,
-            check=False,
-        )
+        _, stderr = process.communicate(timeout=CONVERSION_TIMEOUT_SECONDS)
     except subprocess.TimeoutExpired as exc:
+        # Pandoc starts XeLaTeX. Kill the whole process group, then reap it.
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        process.communicate()
         raise ConversionError("Conversion timed out.", str(exc)) from exc
 
-    diagnostics = completed.stderr[-12_000:]
-    if completed.returncode != 0:
-        logging.error("pandoc failed with exit code %s: %s", completed.returncode, diagnostics)
+    diagnostics = stderr[-12_000:]
+    if process.returncode != 0:
+        logging.error("pandoc failed with exit code %s", process.returncode)
         raise ConversionError(
             "The Markdown contains an equation or construct that could not be typeset."
             if _input_error(diagnostics)

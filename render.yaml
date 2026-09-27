@@ -11,3 +11,7 @@ services:
         value: "1"
       - key: ALLOW_RAW_TEX
         value: "false"
+      - key: TYPESETLLM_PUBLIC_BASE_URL
+        value: "https://typesetllm.onrender.com"
+      - key: TYPESETLLM_DOWNLOAD_RETENTION_SECONDS
+        value: "900"

@@ -1,6 +1,7 @@
 FROM python:3.11-slim
 
 # — Build-time arguments —
+# extarrows provides \xleftrightarrow, which the vintage template supports.
 ARG TL_PACKAGES="adjustbox amsmath amssymb babel-english booktabs caption colortbl enumitem extarrows fancyhdr float fontspec framed fvextra geometry graphics hyperref listings longtable microtype multirow pdflscape rotating setspace subcaption tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval collection-fontsrecommended collection-latexrecommended"
 ARG PANDOC_VERSION=3.2
 
@@ -56,7 +57,9 @@ COPY filters ./filters
 COPY fonts ./fonts
 COPY web ./web
 COPY run_local.py ./
+COPY tests/test_mcp.py ./tests/test_mcp.py
 RUN python -m src.smoke
+RUN python -m pytest -q tests/test_mcp.py
 
 
 # — Expose & Run —

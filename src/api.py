@@ -1,11 +1,5 @@
 #!/usr/bin/env python
-"""
-FastAPI service – Markdown → PDF (rev B)
-======================================
-Fixes a bug where JSON requests were mistakenly treated as form-data first.,
-consuming the body and yielding a 422e. Now we branch on Content-Type
-once + we never read the body twice.
-"""
+"""FastAPI web, REST, and hosted MCP service for Markdown-to-PDF rendering."""
 
 from __future__ import annotations
 
@@ -14,27 +8,18 @@ from contextlib import asynccontextmanager
 import json
 import logging
 import os
-import re
 import uuid
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import Any, Callable, Final, Tuple
+from typing import Any, Final, Tuple
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, status
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-import yaml
 
-try:
-    from slowapi import Limiter
-    from slowapi.errors import RateLimitExceeded
-    from slowapi.middleware import SlowAPIMiddleware
-    from slowapi.util import get_remote_address
-except ModuleNotFoundError:  # pragma: no cover - depends on local environment
-    Limiter = None
-    RateLimitExceeded = None
-    SlowAPIMiddleware = None
-    get_remote_address = None
+from src.conversion import ALLOW_RAW_TEX, ConversionFailure, MAX_REQUEST_BYTES, render_markdown
+from src.downloads import DownloadStore
+from src.hosted_mcp import build_mcp
+from src.naming import output_filename
 
 @asynccontextmanager
 async def renderer_lifespan(application: FastAPI):
@@ -46,80 +31,35 @@ async def renderer_lifespan(application: FastAPI):
         reference = uuid.uuid4().hex[:12]
         logging.exception("Renderer readiness failed [%s]", reference)
         application.state.renderer_readiness = {"status": "unavailable", "reference": reference}
-    yield
+    async with mcp_server.session_manager.run():
+        cleanup_task = asyncio.create_task(_purge_downloads())
+        try:
+            yield
+        finally:
+            cleanup_task.cancel()
+            try:
+                await cleanup_task
+            except asyncio.CancelledError:
+                pass
+            download_store.close()
+
+
+async def _purge_downloads() -> None:
+    while True:
+        await asyncio.sleep(60)
+        download_store.purge()
 
 
 app = FastAPI(title="Markdown → PDF API", version="0.5.1", lifespan=renderer_lifespan)
 
 
-def _positive_int_env(name: str, default: int) -> int:
-    try:
-        value = int(os.environ.get(name, str(default)))
-    except ValueError:
-        logging.warning("Ignoring invalid %s; using %s", name, default)
-        return default
-    return value if value > 0 else default
-
-
-MAX_REQUEST_BYTES: Final[int] = _positive_int_env("MAX_REQUEST_BYTES", 1_048_576)
-MAX_CONCURRENT_CONVERSIONS: Final[int] = _positive_int_env("MAX_CONCURRENT_CONVERSIONS", 1)
-ALLOW_RAW_TEX: Final[bool] = os.environ.get("ALLOW_RAW_TEX", "false").lower() in {"1", "true", "yes"}
-_conversion_slots = asyncio.Semaphore(MAX_CONCURRENT_CONVERSIONS)
 app.state.renderer_readiness = {"status": "starting"}
-
-def _no_limit(func: Callable[..., Any]) -> Callable[..., Any]:
-    return func
-
-
-if Limiter is not None and get_remote_address is not None and SlowAPIMiddleware is not None:
-    # Only the expensive conversion endpoint is rate limited. Render probes
-    # /ready every few seconds, so a global limit would eventually mark every
-    # healthy instance unavailable.
-    limiter = Limiter(key_func=get_remote_address)
-    app.state.limiter = limiter
-    app.add_middleware(SlowAPIMiddleware)
-    convert_limit = limiter.limit("60/hour")
-else:  # pragma: no cover - depends on local environment
-    limiter = None
-    app.state.limiter = None
-    convert_limit = _no_limit
-
-
-if RateLimitExceeded is not None:
-    @app.exception_handler(RateLimitExceeded)
-    async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):  # noqa: D401
-        # slowapi raises its own exception; we just return something consistent
-        return JSONResponse({"detail": "Rate limit exceeded"}, status_code=status.HTTP_429_TOO_MANY_REQUESTS)
 
 
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR: Final[Path] = BASE_DIR / "templates"
-DEFAULT_TEMPLATE: Final[Path] = TEMPLATES_DIR / "vintage.tex"
 WEB_DIR: Final[Path] = BASE_DIR / "web"
 INDEX_HTML: Final[Path] = WEB_DIR / "index.html"
 FONTS_DIR: Final[Path] = BASE_DIR / "fonts"
-
-# themes map to template filenames. don't accept paths or funny business.
-_THEME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
-
-
-def _output_filename(markdown: str) -> str:
-    """Choose a safe filename from YAML title, then a heading, then a default."""
-    title = None
-    match = re.match(r"\A---\s*\n(.*?)\n---\s*(?:\n|\Z)", markdown, re.DOTALL)
-    if match:
-        try:
-            metadata = yaml.safe_load(match.group(1))
-            if isinstance(metadata, dict) and isinstance(metadata.get("title"), str):
-                title = metadata["title"]
-        except yaml.YAMLError:
-            pass
-    if not title:
-        heading = re.search(r"^#\s+(.+)$", markdown, re.MULTILINE)
-        title = heading.group(1) if heading else "converted_document"
-    slug = re.sub(r"[^a-z0-9]+", "-", title.casefold()).strip("-")[:64]
-    return f"{slug or 'converted_document'}.pdf"
-
 
 async def _extract_payload(request: Request) -> Tuple[str, str]:
     """Return (markdown_text, theme) or raise 422.
@@ -202,8 +142,8 @@ async def index() -> FileResponse:
 MCP_HTML: Final[Path] = WEB_DIR / "mcp.html"
 
 
-@app.get("/mcp", include_in_schema=False)
-async def mcp_page() -> FileResponse:
+@app.get("/integrations", include_in_schema=False)
+async def integrations_page() -> FileResponse:
     if not MCP_HTML.is_file():
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="MCP page missing on server.")
     return FileResponse(MCP_HTML, media_type="text/html")
@@ -223,79 +163,41 @@ async def ready() -> JSONResponse:
 
 
 @app.post("/convert", response_class=FileResponse, tags=["conversion"])
-@convert_limit
 async def convert_endpoint(request: Request):  # noqa: D401
     markdown_text, theme = await _extract_payload(request)
-
-    md_clean = markdown_text
-
-    # theme is a template name, not user-controlled filesystem access
-    if not _THEME_RE.fullmatch(theme):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid theme name.")
-
-    tpl_path = (TEMPLATES_DIR / f"{theme}.tex").resolve()
-    if not tpl_path.is_file():
-        tpl_path = DEFAULT_TEMPLATE
-
-    # if this triggers, the container/image is broken (or the deploy missed templates)
-    if not tpl_path.is_file():
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Template missing on server.")
-
-    # the converter works with file paths, so we materialize both ends
-    md_tmp = NamedTemporaryFile(delete=False, suffix=".md", mode="w", encoding="utf-8")
-    md_tmp.write(md_clean)
-    md_tmp.close()
-    md_path = Path(md_tmp.name)
-
-    pdf_tmp = NamedTemporaryFile(delete=False, suffix=".pdf")
-    pdf_tmp.close()
-    pdf_path = Path(pdf_tmp.name)
-
-    # imports here so the module loads fast and errors are localized to conversion
-    from src.cli import (
-        DEFAULT_MARKDOWN_FORMAT,
-        ConversionError,
-        convert_with_diagnostics,
-    )
-
-    markdown_format = DEFAULT_MARKDOWN_FORMAT
-    if not ALLOW_RAW_TEX:
-        markdown_format = markdown_format.replace("+raw_tex", "-raw_tex")
-
     try:
-        # Keep CPU- and memory-heavy TeX processes bounded on small instances.
-        async with _conversion_slots:
-            result = await asyncio.to_thread(
-                convert_with_diagnostics, md_path, pdf_path, markdown_format, tpl_path
-            )
-
-        # cheap sanity check; empty output usually means a LaTeX/pandoc failure upstream
-        if pdf_path.stat().st_size == 0:
-            raise RuntimeError("Empty PDF generated.")
-    except Exception as exc:
-        reference = uuid.uuid4().hex[:12]
-        logging.exception("Conversion failed [%s]", reference)
-        md_path.unlink(missing_ok=True)
-        pdf_path.unlink(missing_ok=True)
-        user_error = isinstance(exc, ConversionError) and exc.input_error
+        rendered = await render_markdown(markdown_text, theme, request.client.host if request.client else "unknown")
+    except ConversionFailure as exc:
         raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY if user_error else status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "message": str(exc) if isinstance(exc, ConversionError) else "Could not generate PDF.",
-                "reference": reference,
-            },
+            exc.status_code, detail={"message": str(exc), "reference": exc.reference},
         ) from exc
 
-    # FileResponse streams the file; cleanup has to happen after the response is sent
     background_tasks = BackgroundTasks()
-    background_tasks.add_task(md_path.unlink, missing_ok=True)
-    background_tasks.add_task(pdf_path.unlink, missing_ok=True)
+    background_tasks.add_task(rendered.cleanup)
 
     response = FileResponse(
-        path=str(pdf_path),
+        path=str(rendered.path),
         media_type="application/pdf",
-        filename=_output_filename(md_clean),
+        filename=output_filename(markdown_text),
         background=background_tasks,
     )
-    response.headers["X-Typeset-Warnings"] = json.dumps(result.warnings, ensure_ascii=True)
+    response.headers["X-Typeset-Warnings"] = json.dumps(rendered.warnings, ensure_ascii=True)
     return response
+
+
+download_store = DownloadStore()
+PUBLIC_BASE_URL = os.environ.get("TYPESETLLM_PUBLIC_BASE_URL", "https://typesetllm.onrender.com").rstrip("/")
+
+
+@app.get("/downloads/{token}.pdf", include_in_schema=False)
+async def download_pdf(token: str):
+    item = download_store.get(token)
+    if item is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Download not found or expired.")
+    return FileResponse(item.path, media_type="application/pdf", filename=item.filename,
+                        headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"})
+
+
+mcp_server, mcp_http_app = build_mcp(app, download_store, PUBLIC_BASE_URL,
+                                     os.environ.get("TYPESETLLM_ALLOWED_HOSTS", ""))
+app.mount("/", mcp_http_app, name="mcp")

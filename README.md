@@ -4,7 +4,15 @@
 
 Turns Markdown into a decent PDF. Uses Pandoc and XeLaTeX.
 
-There is a command-line tool, a small web interface, and an HTTP API.
+There is a hosted MCP server, a command-line tool, a small web interface, and an HTTP API.
+
+## Connect from Codex
+
+```sh
+codex mcp add typesetllm --url https://typesetllm.onrender.com/mcp
+```
+
+Check with `codex mcp list`, then reconnect or start a new Codex session if needed. Ask: “Use TypesetLLM to convert report.md into a PDF and save it here.” TypesetLLM renders on its server and returns a temporary HTTPS link; the client downloads the PDF into its workspace. See the [integration guide](https://typesetllm.onrender.com/integrations) and [MCP details](mcp/README.md).
 
 ## Requirements
 
@@ -54,6 +62,8 @@ curl -X POST http://localhost:8000/convert \
 Useful endpoints:
 
 - `POST /convert` — make a PDF
+- `POST /mcp` — Streamable HTTP MCP
+- `GET /integrations` — MCP setup guide
 - `GET /health` — process check
 - `GET /ready` — renderer check
 
@@ -68,12 +78,6 @@ docker run --rm -p 8000:8000 typesetllm
 
 The included `render.yaml` can be used to deploy the same image on Render.
 
-## MCP
-
-The MCP server lets Claude Code, Codex CLI, and other MCP clients call the hosted converter.
-
-See [mcp/README.md](mcp/README.md).
-
 ## Tests
 
 ```sh
@@ -83,8 +87,8 @@ python -m pytest -q
 ## Notes
 
 - Maximum web request size: 1 MB by default.
-- Conversions time out after 45 seconds by default.
+- Conversions time out after 45 seconds by default, including MCP calls.
 - Mermaid diagrams are not rendered.
-- Files created by the web API are temporary.
+- MCP PDFs are temporary and expire after 15 minutes by default. A restart removes them; multiple app instances need shared storage for downloads and coordinated limits.
 
 MIT License.

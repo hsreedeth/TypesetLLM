@@ -37,10 +37,14 @@ async def test_index_page_served(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_renderer_readiness_is_a_real_render(client: AsyncClient):
-    from src.api import renderer_lifespan
+    from src.smoke import run_smoke_check
 
-    async with renderer_lifespan(app):
+    previous = app.state.renderer_readiness
+    app.state.renderer_readiness = run_smoke_check()
+    try:
         response = await client.get("/ready")
+    finally:
+        app.state.renderer_readiness = previous
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["status"] == "ready"
     assert response.json()["pandoc"].startswith("pandoc")

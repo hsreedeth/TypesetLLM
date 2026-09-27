@@ -13,72 +13,38 @@
       <header class="mcp-header">
         <a class="mcp-back" href="/">← TypesetLLM</a>
         <h1>Typeset<span class="brand-suffix">LLM</span> · MCP</h1>
-        <video class="mcp-demo-video" controls preload="metadata" playsinline aria-label="TypesetLLM MCP demo">
-          <source src="/static/mcp-demo.mp4" type="video/mp4" />
-          Your browser does not support this video. <a href="/static/mcp-demo.mp4">Download the demo</a>.
-        </video>
-        <p class="brand-description mcp-lede">
-          Call TypesetLLM as a tool from Claude Code, Codex CLI, or any other MCP client, instead of pasting
-          Markdown into the browser. One tool renders a PDF and saves it locally; a second
-          checks whether the renderer is warmed up.
-        </p>
-        <a class="action-button mcp-github-button" href="https://github.com/hsreedeth/TypesetLLM/tree/main/mcp" target="_blank" rel="noreferrer">
-          View on GitHub
-        </a>
+        <p class="brand-description mcp-lede">Connect Codex to TypesetLLM with one command:</p>
+        <pre class="mcp-code"><code>codex mcp add typesetllm --url https://typesetllm.onrender.com/mcp</code></pre>
+        <p class="mcp-body mcp-client-label">Run <code>codex mcp list</code> to verify it was added. Reconnect or start a new Codex session if the tools do not appear.</p>
+        <pre class="mcp-code"><code>Use TypesetLLM to convert report.md into a PDF and save it here.</code></pre>
+        <p class="mcp-body mcp-client-label">Rendering happens on TypesetLLM’s server. Your client downloads the resulting PDF into its workspace from a temporary link.</p>
       </header>
 
-      <section class="mcp-section" aria-labelledby="mcp-install-heading">
-        <h2 id="mcp-install-heading">Install</h2>
-        <pre class="mcp-code"><code>cd mcp
-python -m venv .venv
-. .venv/bin/activate
-pip install -r requirements.txt</code></pre>
+      <section class="mcp-section" aria-labelledby="claude-heading">
+        <h2 id="claude-heading">Claude Code</h2>
+        <pre class="mcp-code"><code>claude mcp add --transport http typesetllm https://typesetllm.onrender.com/mcp</code></pre>
+        <p class="mcp-body mcp-client-label">Use <code>claude mcp list</code> to check the connection.</p>
       </section>
 
-      <section class="mcp-section" aria-labelledby="mcp-cli-heading">
-        <h2 id="mcp-cli-heading">Add to Claude Code and Codex CLI</h2>
-        <p class="mcp-body">Claude Code</p>
-        <pre class="mcp-code"><code>claude mcp add typesetllm -- python /absolute/path/to/mcp/server.py</code></pre>
-        <p class="mcp-body mcp-client-label">Codex CLI</p>
-        <pre class="mcp-code"><code>codex mcp add typesetllm -- python /absolute/path/to/mcp/server.py</code></pre>
-      </section>
-
-      <section class="mcp-section" aria-labelledby="mcp-desktop-heading">
-        <h2 id="mcp-desktop-heading">Add to Claude Desktop</h2>
-        <p class="mcp-body">Add this to <code>claude_desktop_config.json</code> and restart Claude Desktop.</p>
-        <pre class="mcp-code"><code>{
-  "mcpServers": {
-    "typesetllm": {
-      "command": "python",
-      "args": ["/absolute/path/to/mcp/server.py"]
-    }
-  }
-}</code></pre>
-      </section>
-
-      <section class="mcp-section" aria-labelledby="mcp-tools-heading">
-        <h2 id="mcp-tools-heading">Tools</h2>
+      <section class="mcp-section" aria-labelledby="tools-heading">
+        <h2 id="tools-heading">Tools</h2>
         <dl class="mcp-tool-list">
           <dt><code>convert_markdown_to_pdf</code></dt>
-          <dd>Renders Markdown to a typeset PDF via <code>/convert</code> and saves it locally. Returns the file path and any renderer quality warnings.</dd>
+          <dd>Returns a short lived HTTPS download URL, filename, expiration time, and rendering warnings.</dd>
           <dt><code>typesetllm_status</code></dt>
-          <dd>Pings <code>/ready</code> — useful since the hosted instance can cold-start after idling.</dd>
+          <dd>Checks renderer readiness.</dd>
         </dl>
       </section>
 
-      <section class="mcp-section" aria-labelledby="mcp-config-heading">
-        <h2 id="mcp-config-heading">Configuration</h2>
-        <p class="mcp-body">Points at the public deployment by default. Override with environment variables to target a different instance or change where PDFs land:</p>
-        <table class="mcp-table">
-          <thead><tr><th>Variable</th><th>Default</th></tr></thead>
-          <tbody>
-            <tr><td><code>TYPESETLLM_URL</code></td><td><code>https://typesetllm.onrender.com</code></td></tr>
-            <tr><td><code>TYPESETLLM_OUTDIR</code></td><td><code>~/typesetllm-output</code></td></tr>
-            <tr><td><code>TYPESETLLM_TIMEOUT</code></td><td><code>90</code> seconds</td></tr>
-          </tbody>
-        </table>
+      <section class="mcp-section" aria-labelledby="local-heading">
+        <h2 id="local-heading">Optional local adapter</h2>
+        <p class="mcp-body">The <a href="https://github.com/hsreedeth/TypesetLLM/tree/main/mcp" target="_blank" rel="noreferrer">stdio adapter</a> calls the hosted conversion API and writes PDFs locally. It requires Python and a repository checkout.</p>
+        <pre class="mcp-code"><code>cd mcp
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+codex mcp add typesetllm-local -- python /absolute/path/to/mcp/server.py</code></pre>
       </section>
-
       <footer class="footer-note mcp-footer"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
     </main>
   </body>

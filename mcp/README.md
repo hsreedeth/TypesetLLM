@@ -1,86 +1,46 @@
-# typesetllm-mcp
+# TypesetLLM MCP
 
-A minimal MCP server that wraps the [TypesetLLM](https://github.com/hsreedeth/TypesetLLM)
-`/convert` endpoint, so any MCP client can turn Markdown into a typeset PDF
-as a tool call.
+TypesetLLM hosts a Streamable HTTP MCP server at `https://typesetllm.onrender.com/mcp`.
 
+## Codex
 
-## Install
+```sh
+codex mcp add typesetllm --url https://typesetllm.onrender.com/mcp
+codex mcp list
+```
 
-```bash
-cd typesetllm-mcp
+Reconnect or start a new Codex session if the tools do not appear. Example prompt: “Use TypesetLLM to convert report.md into a PDF and save it here.” Codex reads the file, calls the remote tool, and can download the result into its workspace. Rendering happens on TypesetLLM's server.
+
+## Claude Code
+
+```sh
+claude mcp add --transport http typesetllm https://typesetllm.onrender.com/mcp
+claude mcp list
+```
+
+This syntax follows [Claude Code's official remote HTTP MCP documentation](https://code.claude.com/docs/en/mcp#option-1-add-a-remote-http-server).
+
+## Tools
+
+- `convert_markdown_to_pdf(markdown_text, filename?)` returns a structured HTTPS download URL, safe filename, expiration timestamp, warnings, and a download instruction. It does not return a server path or PDF base64.
+- `typesetllm_status()` returns renderer readiness.
+
+The web app, REST endpoint and MCP tool share a per-process conversion semaphore and per-client rate limit. Defaults: 1 MB of Markdown, 45 seconds rendering, one concurrent conversion, 60 conversions per hour per client. `MAX_REQUEST_BYTES`, `CONVERSION_TIMEOUT_SECONDS`, `MAX_CONCURRENT_CONVERSIONS`, and `CONVERSION_RATE_LIMIT_PER_HOUR` configure these limits.
+
+`TYPESETLLM_PUBLIC_BASE_URL` must be the deployment's HTTPS origin and controls download URLs (default `https://typesetllm.onrender.com`). `TYPESETLLM_DOWNLOAD_RETENTION_SECONDS` controls expiration (default `900`). `TYPESETLLM_ALLOWED_HOSTS` can add comma-separated public hostnames when a reverse proxy uses another Host header. PDF downloads use unguessable tokens and return 404 when invalid or expired.
+
+Downloads live in temporary local storage. They disappear on restart, and tokens only work on the instance that rendered the PDF. Multiple instances require shared PDF storage, shared token metadata, and coordinated concurrency and rate limits.
+
+## Optional local adapter
+
+The existing `server.py` stdio adapter still calls the hosted `/convert` endpoint and writes the response to local disk. It is only needed if you prefer a local MCP process.
+
+```sh
+cd mcp
 python -m venv .venv
-. .venv/bin/activate        # Windows: .venv\Scripts\activate
+. .venv/bin/activate
 pip install -r requirements.txt
+codex mcp add typesetllm-local -- python /absolute/path/to/mcp/server.py
 ```
 
-## Run it directly (sanity check)
-
-```bash
-python server.py
-```
-
-
-## Add to Claude Code
-
-```bash
-claude mcp add typesetllm -- python /absolute/path/to/typesetllm-mcp/server.py
-```
-
-## Add to Claude Desktop
-
-Edit your `claude_desktop_config.json` and add:
-
-```json
-{
-  "mcpServers": {
-    "typesetllm": {
-      "command": "python",
-      "args": ["/absolute/path/to/typesetllm-mcp/server.py"]
-    }
-  }
-}
-```
-
-Restart Claude Desktop afterward.
-
-## Configuration (optional environment variables)
-
-| Variable             | Default                            | Purpose                                   |
-| --------------------- | ----------------------------------- | ------------------------------------------ |
-| `TYPESETLLM_URL`      | `https://typesetllm.onrender.com`   | Which deployment to call                   |
-| `TYPESETLLM_OUTDIR`   | `~/typesetllm-output`               | Where PDFs get saved locally               |
-| `TYPESETLLM_TIMEOUT`  | `90`                                | Client-side request timeout (seconds)      |
-| `TYPESETLLM_MAX_BYTES`| `1048576`                           | Local pre-check, mirrors the service cap   |
-
-Set these in the `env` block of the client config if you need to point at a
-different deployment, e.g.:
-
-```json
-{
-  "mcpServers": {
-    "typesetllm": {
-      "command": "python",
-      "args": ["/absolute/path/to/typesetllm-mcp/server.py"],
-      "env": { "TYPESETLLM_URL": "https://your-instance.example" }
-    }
-  }
-}
-```
-
-## Tools exposed
-
-- **convert_markdown_to_pdf(markdown_text, filename?)** — renders Markdown
-  to PDF via the service and saves it to `TYPESETLLM_OUTDIR`, returning the
-  path and any renderer quality warnings (e.g. unsupported Mermaid blocks or
-  citation keys).
-- **typesetllm_status()** — pings `/ready` on the deployment, useful since
-  the Render free tier cold-starts after idling.
-
-## Notes
-
-- The public `/convert` endpoint runs with raw TeX disabled
-  (`ALLOW_RAW_TEX=false`), same as the hosted service.
-- Requests over ~1MB or that take longer than the service's 45s conversion
-  timeout will fail server-side; this wrapper surfaces those as readable
-  error messages instead of a raw HTTP error.
+Its optional environment variables are `TYPESETLLM_URL`, `TYPESETLLM_OUTDIR`, `TYPESETLLM_TIMEOUT`, and `TYPESETLLM_MAX_BYTES`.
