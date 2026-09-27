@@ -6,13 +6,16 @@
     <title>TypesetLLM — MCP</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="stylesheet" href="/static/styles.css?v=phone9" />
-    <link rel="stylesheet" href="/static/mcp.css?v=3" />
+    <link rel="stylesheet" href="/static/mcp.css?v=cover1" />
   </head>
   <body>
+    <header class="mcp-cover">
+      <img src="/static/mcp-cover.png" alt="" />
+      <h1 class="sr-only">TypesetLLM Model Context Protocol</h1>
+      <a class="mcp-back" href="/">← TypesetLLM</a>
+    </header>
     <main class="mcp-shell">
       <header class="mcp-header">
-        <a class="mcp-back" href="/">← TypesetLLM</a>
-        <h1>Typeset<span class="brand-suffix">LLM</span> · MCP</h1>
         <p class="brand-description mcp-lede">Connect Codex to TypesetLLM with one command:</p>
         <pre class="mcp-code"><code>codex mcp add typesetllm --url https://typesetllm.onrender.com/mcp</code></pre>
         <p class="mcp-body mcp-client-label">Run <code>codex mcp list</code> to verify it was added. Reconnect or start a new Codex session if the tools do not appear.</p>

@@ -2,11 +2,13 @@
    #85858c secondary, #a1a1a8 borders, 7px radius) so the page matches
    the rest of the site without touching styles.css. */
 
+.mcp-cover { position: relative; width: 100%; }
+.mcp-cover img { display: block; width: 100%; height: auto; }
 .mcp-shell { max-width: 640px; margin: 0 auto; padding: 40px 22px 60px; }
-.mcp-header h1 { margin: 18px 0 0; font-size: 22px; font-weight: 500; letter-spacing: -.025em; }
-.mcp-back { color: #85858c; font-size: 13px; text-decoration: none; }
-.mcp-back:hover { color: #242428; }
-.mcp-lede { max-width: 460px; margin-top: 10px; font-size: 13px; }
+.mcp-back { position: absolute; top: 20px; left: 22px; padding: 8px 11px; border-radius: 7px; background: rgba(255,255,255,.85); color: #071d5d; font-size: 13px; text-decoration: none; }
+.mcp-back:hover { background: #fff; }
+.mcp-back:focus-visible { outline: 2px solid #071d5d; outline-offset: 2px; }
+.mcp-lede { max-width: 460px; margin-top: 0; font-size: 13px; }
 .mcp-github-button { display: inline-block; width: auto; margin-top: 18px; padding: 9px 16px; border: 1px solid #a1a1a8; border-radius: 7px; text-decoration: none; color: #242428; }
 .mcp-github-button:hover { border-color: #46464d; color: #111; }
 
@@ -33,4 +35,5 @@
 
 .mcp-footer { margin-top: 60px; justify-self: start; }
 
+@media (max-width: 600px) { .mcp-back { top: auto; left: auto; right: 12px; bottom: 12px; padding: 10px 12px; font-size: 12px; } }
 @media (max-width: 460px) { .mcp-shell { padding: 28px 18px 48px; } }
