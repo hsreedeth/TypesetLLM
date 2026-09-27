@@ -6,13 +6,17 @@
     <title>TypesetLLM — MCP</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
     <link rel="stylesheet" href="/static/styles.css?v=phone9" />
-    <link rel="stylesheet" href="/static/mcp.css?v=2" />
+    <link rel="stylesheet" href="/static/mcp.css?v=3" />
   </head>
   <body>
     <main class="mcp-shell">
       <header class="mcp-header">
         <a class="mcp-back" href="/">← TypesetLLM</a>
         <h1>Typeset<span class="brand-suffix">LLM</span> · MCP</h1>
+        <video class="mcp-demo-video" controls preload="metadata" playsinline aria-label="TypesetLLM MCP demo">
+          <source src="/static/mcp-demo.mp4" type="video/mp4" />
+          Your browser does not support this video. <a href="/static/mcp-demo.mp4">Download the demo</a>.
+        </video>
         <p class="brand-description mcp-lede">
           Call TypesetLLM as a tool from Claude Code, Codex CLI, or any other MCP client, instead of pasting
           Markdown into the browser. One tool renders a PDF and saves it locally; a second
@@ -73,14 +77,6 @@ pip install -r requirements.txt</code></pre>
             <tr><td><code>TYPESETLLM_TIMEOUT</code></td><td><code>90</code> seconds</td></tr>
           </tbody>
         </table>
-      </section>
-
-      <section class="mcp-section" aria-labelledby="mcp-demo-heading">
-        <h2 id="mcp-demo-heading">Demo</h2>
-        <video class="mcp-demo-video" controls preload="metadata" playsinline aria-label="TypesetLLM MCP demo">
-          <source src="/static/mcp-demo.mp4" type="video/mp4" />
-          Your browser does not support this video. <a href="/static/mcp-demo.mp4">Download the demo</a>.
-        </video>
       </section>
 
       <footer class="footer-note mcp-footer"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
