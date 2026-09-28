@@ -76,7 +76,7 @@ button, textarea { font: inherit; }
 .branding-demo-stage { display: grid; place-items: center; background: #101013; }
 .branding-demo-video { width: 100%; height: 100%; object-fit: contain; }
 .branding-demo-video[hidden] { display: none; }
-.branding-demo-back { position: absolute; z-index: 1; top: calc(20px + env(safe-area-inset-top)); left: 20px; min-height: 42px; padding: 9px 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,.76); color: #202024; font-size: 14px; cursor: pointer; }
+.branding-demo-back { position: absolute; z-index: 1; bottom: calc(72px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); min-height: 42px; padding: 9px 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,.76); color: #202024; font-size: 14px; white-space: nowrap; cursor: pointer; }
 .branding-demo-back:hover { background: #fff; }
 .branding-demo-back:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
 .mcp-link-button { display: grid; place-items: center; width: 134px; height: 35px; margin-top: 9px; padding: 0 11px; border: 1px solid #a1a1a8; border-radius: 7px; background: #fff; color: #3567b8; font-family: Inter, sans-serif; font-size: 13px; font-weight: 300; line-height: 1; text-align: center; text-decoration: none; }
