@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import shutil
 import sys
@@ -15,7 +16,6 @@ from src.cli import DEFAULT_TEMPLATE, WEB_MARKDOWN_FORMAT, convert_with_diagnost
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "tests" / "fixtures" / "audit"
-ORIGINAL = Path("/private/tmp/typesetllm-audit/local-results")
 OUTPUT = ROOT / "evidence" / "audit"
 CASES = ("02_small_table", "03_wide_table", "05_math_brackets", "06_unicode", "07_long_code", "08_multipage_table", "13_metadata", "16_realistic_report")
 
@@ -35,13 +35,17 @@ def inspect(pdf: Path, stem: str) -> dict:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Render audit fixtures and optional before/after comparisons.")
+    parser.add_argument("--before-dir", type=Path, help="Directory containing earlier PDFs named after the fixtures")
+    args = parser.parse_args()
     OUTPUT.mkdir(parents=True, exist_ok=True)
     findings = {}
     for name in CASES:
         before = OUTPUT / f"{name}-before.pdf"
         after = OUTPUT / f"{name}-after.pdf"
-        if (ORIGINAL / f"{name}.pdf").exists():
-            shutil.copyfile(ORIGINAL / f"{name}.pdf", before)
+        previous_pdf = args.before_dir / f"{name}.pdf" if args.before_dir else None
+        if previous_pdf and previous_pdf.exists():
+            shutil.copyfile(previous_pdf, before)
             previous = inspect(before, f"{name}-before")
         else:
             previous = None

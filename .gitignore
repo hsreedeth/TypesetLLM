@@ -1,11 +1,63 @@
-venv/
+# Local Python environments and caches
 .venv/
+venv/
+env/
 __pycache__/
+*.py[cod]
 .pytest_cache/
-.vscode/
-.idea/
-animation/node_modules/
-# OS cruft
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+
+# Build and package outputs
+build/
+dist/
+*.egg-info/
+node_modules/
+
+# Generated documents and TeX intermediates
+*.pdf
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
+*.xdv
+evidence/audit/
+
+# Temporary downloads, logs, and machine-specific files
+*.crdownload
+*.mov
+*.tmp
+*.swp
+*.swo
+*.log.*
 .DS_Store
 Thumbs.db
-*.pdf
+.idea/
+.vscode/
+
+# Unused local copies of past web assets
+web/mcp 2.css
+web/mcp-demo.mp4
+web/branding/TypesetLLMDemo.mp4
+web/branding/TypesetLLMDemo-poster.png
+web/branding/Demo.mp4
+animation/node_modules

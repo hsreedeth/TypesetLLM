@@ -16,8 +16,7 @@ Environment variables:
     TYPESETLLM_OUTDIR  Directory to write returned PDFs into.
                         Default: ~/typesetllm-output
     TYPESETLLM_TIMEOUT Client-side request timeout in seconds.
-                        Default: 90 (covers Render free-tier cold starts;
-                        the server's own conversion timeout is 45s once warm)
+                        Default: 90 (the server's conversion timeout defaults to 45s)
 """
 
 import os
@@ -58,14 +57,10 @@ def _derive_stem(markdown_text: str) -> str:
 @mcp.tool()
 def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> str:
     """
-    Render Markdown into a handout-style, typeset PDF (via Pandoc + XeLaTeX)
-    and save it to disk.
+    Send Markdown to the TypesetLLM HTTP service and save the returned PDF.
 
-    Good for turning an LLM-generated report, note, or short-form writeup
-    into a properly typeset document (tables, math, code blocks, scientific
-    superscripts all supported). Mermaid diagrams and unresolved citation
-    keys are not supported and will come back as warnings, not silent
-    failures.
+    The service reports warnings for Mermaid blocks and unresolved citation
+    keys. Review the PDF when using tables, math, or unusual Unicode text.
 
     Args:
         markdown_text: The Markdown source to render.
@@ -74,7 +69,7 @@ def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> 
 
     Returns:
         A message with the local path the PDF was saved to, plus any
-        quality warnings the renderer reported.
+        renderer warnings.
     """
     size = len(markdown_text.encode("utf-8"))
     if size > MAX_REQUEST_BYTES:
@@ -93,8 +88,7 @@ def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> 
     except httpx.TimeoutException:
         return (
             f"Request to {TYPESETLLM_URL} timed out after {TIMEOUT}s. "
-            "If this is a Render free-tier instance, it may have been "
-            "asleep and needed a cold start — try again."
+            "The service may be starting or busy; try again."
         )
     except httpx.RequestError as e:
         return f"Could not reach {TYPESETLLM_URL}: {e}"
@@ -115,7 +109,7 @@ def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> 
     warnings = resp.headers.get("X-Typeset-Warnings")
     msg = f"Saved PDF to {out_path}"
     if warnings:
-        msg += f"\n\nQuality warnings from the renderer: {warnings}"
+        msg += f"\n\nRenderer warnings: {warnings}"
     return msg
 
 

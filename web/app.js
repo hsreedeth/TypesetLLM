@@ -14,13 +14,6 @@ const heading = document.getElementById('brand-heading');
 const suffix = document.getElementById('brand-suffix');
 const watchSlidesButton = document.getElementById('watch-slides-button');
 const brandingSlides = document.getElementById('branding-slides');
-const brandingCarousel = document.getElementById('branding-carousel');
-const brandingSlideStage = document.querySelector('.branding-slide-stage');
-const brandingDemoStage = document.getElementById('branding-demo-stage');
-const watchDemoButton = document.getElementById('watch-demo-button');
-const brandingDemoBack = document.getElementById('branding-demo-back');
-const brandingDemoVideo = document.getElementById('branding-demo-video');
-const brandingMcpDemoVideo = document.getElementById('branding-mcp-demo-video');
 const brandingVideo = document.getElementById('branding-video');
 const introVideo = document.getElementById('intro-video');
 const brandingCount = document.getElementById('branding-count');
@@ -180,7 +173,6 @@ let brandingReturnFocus = heading;
 let brandingTouchStart = null;
 let downwardWheelDistance = 0;
 let wheelResetTimer = 0;
-let activeDemoVideo = null;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 if (reducedMotion) {
@@ -195,37 +187,8 @@ function stopBrandingAutoplay() {
 
 function scheduleBrandingAdvance() {
   window.clearTimeout(brandingAutoTimer);
-  if (brandingInteracted || reducedMotion || brandingOverlay.hidden || brandingOverlay.classList.contains('intro-only') || brandingCarousel.classList.contains('demo-open') || activeBrandingSlide >= brandingSlideCount - 1) return;
+  if (brandingInteracted || reducedMotion || brandingOverlay.hidden || brandingOverlay.classList.contains('intro-only') || activeBrandingSlide >= brandingSlideCount - 1) return;
   brandingAutoTimer = window.setTimeout(() => goToBrandingSlide(activeBrandingSlide + 1), 4200);
-}
-
-function showBrandingDemo() {
-  if (brandingOverlay.hidden || brandingOverlay.classList.contains('intro-only') || activeBrandingSlide > 3 || brandingCarousel.classList.contains('demo-open')) return;
-  stopBrandingAutoplay();
-  brandingVideo.pause();
-  activeDemoVideo = activeBrandingSlide === 3 ? brandingMcpDemoVideo : brandingDemoVideo;
-  brandingDemoVideo.hidden = activeDemoVideo !== brandingDemoVideo;
-  brandingMcpDemoVideo.hidden = activeDemoVideo !== brandingMcpDemoVideo;
-  activeDemoVideo.currentTime = 0;
-  brandingSlideStage.inert = true;
-  brandingDemoStage.inert = false;
-  watchDemoButton.setAttribute('aria-expanded', 'true');
-  brandingCarousel.classList.add('demo-open');
-  activeDemoVideo.play().catch(() => {
-    // Native controls remain available if the browser blocks playback.
-  });
-  brandingDemoBack.focus({ preventScroll: true });
-}
-
-function returnToBrandingSlide() {
-  if (!brandingCarousel.classList.contains('demo-open')) return;
-  activeDemoVideo.pause();
-  brandingCarousel.classList.remove('demo-open');
-  brandingDemoStage.inert = true;
-  brandingSlideStage.inert = false;
-  watchDemoButton.setAttribute('aria-expanded', 'false');
-  activeDemoVideo = null;
-  watchDemoButton.focus({ preventScroll: true });
 }
 
 function closeBranding() {
@@ -238,12 +201,6 @@ function closeBranding() {
   brandingTouchStart = null;
   introVideo.pause();
   brandingVideo.pause();
-  if (activeDemoVideo) activeDemoVideo.pause();
-  activeDemoVideo = null;
-  brandingCarousel.classList.remove('demo-open');
-  brandingSlideStage.inert = false;
-  brandingDemoStage.inert = true;
-  watchDemoButton.setAttribute('aria-expanded', 'false');
   brandingOverlay.hidden = true;
   document.body.classList.remove('branding-open');
   pageShell.inert = false;
@@ -264,12 +221,6 @@ function openBrandingSlides() {
   brandingVideo.parentElement.classList.remove('is-playing');
   brandingVideo.currentTime = 0;
   brandingVideo.load();
-  if (activeDemoVideo) activeDemoVideo.pause();
-  activeDemoVideo = null;
-  brandingCarousel.classList.remove('demo-open');
-  brandingSlideStage.inert = false;
-  brandingDemoStage.inert = true;
-  watchDemoButton.setAttribute('aria-expanded', 'false');
   brandingInteracted = false;
   brandingReturnFocus = watchSlidesButton;
   brandingOverlay.classList.remove('intro-only');
@@ -292,7 +243,6 @@ function updateBrandingSlide() {
     scheduleBrandingAdvance();
   }
   brandingCount.textContent = `${index + 1} / ${brandingSlideCount}`;
-  watchDemoButton.hidden = index >= 4;
   brandingDots.forEach((dot, dotIndex) => {
     if (dotIndex === index) dot.setAttribute('aria-current', 'true');
     else dot.removeAttribute('aria-current');
@@ -319,8 +269,6 @@ function goToBrandingSlide(index) {
 }
 
 watchSlidesButton.addEventListener('click', openBrandingSlides);
-watchDemoButton.addEventListener('click', showBrandingDemo);
-brandingDemoBack.addEventListener('click', returnToBrandingSlide);
 introVideo.addEventListener('ended', finishIntro);
 introVideo.addEventListener('error', finishIntro);
 brandingSlides.addEventListener('pointerdown', stopBrandingAutoplay);
@@ -336,42 +284,22 @@ brandingSlides.addEventListener('wheel', (event) => {
   wheelResetTimer = window.setTimeout(() => { downwardWheelDistance = 0; }, 500);
   if (downwardWheelDistance > 100) {
     downwardWheelDistance = 0;
-    if (activeBrandingSlide < 4) showBrandingDemo();
-    else closeBranding();
-  }
-}, {passive: true});
-brandingDemoStage.addEventListener('wheel', (event) => {
-  if (event.deltaY >= 0 || Math.abs(event.deltaY) <= Math.abs(event.deltaX) * 1.4) {
-    downwardWheelDistance = 0;
-    return;
-  }
-  downwardWheelDistance += Math.abs(event.deltaY);
-  window.clearTimeout(wheelResetTimer);
-  wheelResetTimer = window.setTimeout(() => { downwardWheelDistance = 0; }, 500);
-  if (downwardWheelDistance > 100) {
-    downwardWheelDistance = 0;
-    returnToBrandingSlide();
+    closeBranding();
   }
 }, {passive: true});
 brandingOverlay.addEventListener('touchstart', (event) => {
   brandingTouchStart = !brandingOverlay.classList.contains('intro-only') && event.touches.length === 1
-    ? { x: event.touches[0].clientX, y: event.touches[0].clientY, onSlide: brandingSlides.contains(event.target), onDemo: brandingDemoStage.contains(event.target) }
+    ? { x: event.touches[0].clientX, y: event.touches[0].clientY, onSlide: brandingSlides.contains(event.target) }
     : null;
 }, {passive: true});
 brandingOverlay.addEventListener('touchend', (event) => {
   if (!brandingTouchStart || brandingOverlay.hidden || brandingOverlay.classList.contains('intro-only')) return;
-  const { x, y, onSlide, onDemo } = brandingTouchStart;
+  const { x, y, onSlide } = brandingTouchStart;
   const deltaX = event.changedTouches[0].clientX - x;
   const deltaY = event.changedTouches[0].clientY - y;
   brandingTouchStart = null;
-  if (onDemo && deltaY > 70 && deltaY > Math.abs(deltaX) * 1.4) {
-    returnToBrandingSlide();
-  } else if (onSlide && deltaY < -70 && -deltaY > Math.abs(deltaX) * 1.4) {
-    showBrandingDemo();
-  } else if (onSlide && deltaY > 80 && deltaY > Math.abs(deltaX) * 1.4) {
+  if (onSlide && deltaY > 80 && deltaY > Math.abs(deltaX) * 1.4) {
     closeBranding();
-  } else if (onSlide && window.matchMedia('(max-width: 600px)').matches && Math.abs(deltaX) < 12 && Math.abs(deltaY) < 12) {
-    showBrandingDemo();
   }
 }, {passive: true});
 brandingOverlay.addEventListener('touchcancel', () => { brandingTouchStart = null; }, {passive: true});
@@ -412,9 +340,7 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') { closeBranding(); return; }
   if (event.key !== 'Tab') return;
   if (brandingOverlay.classList.contains('intro-only')) { event.preventDefault(); return; }
-  const focusables = brandingCarousel.classList.contains('demo-open')
-    ? [brandingDemoBack, activeDemoVideo]
-    : [brandingSlides, watchDemoButton, ...brandingDots].filter((element) => !element.hidden);
+  const focusables = [brandingSlides, ...brandingDots].filter((element) => !element.hidden);
   const current = focusables.indexOf(document.activeElement);
   if (event.shiftKey && current === 0) { event.preventDefault(); focusables[focusables.length - 1].focus(); }
   if (!event.shiftKey && current === focusables.length - 1) { event.preventDefault(); focusables[0].focus(); }
@@ -423,7 +349,6 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     introVideo.pause();
     brandingVideo.pause();
-    if (activeDemoVideo) activeDemoVideo.pause();
   } else if (!brandingOverlay.hidden && brandingOverlay.classList.contains('intro-only') && !reducedMotion) {
     introVideo.play().catch(finishIntro);
   }

@@ -1,26 +1,5 @@
 #!/usr/bin/env python
-"""
-md2pdf – Render Markdown to PDF (Pandoc + XeLaTeX)
-==================================================
-A small helper that powers both the standalone CLI + the FastAPI backend.
-
-Key design points (kept stable so tests & API remain unaffected):
----------------------------------------------------------------
-* `convert()` sig stays put so existing imports don't break:
-
-    def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> None
-
-* Failures raise FileNotFoundError (tests + API wrapper expect that).
-* CLI entry (`python -m src.cli ...`) keeps same flags so smoke tests stay green.
-* Missing src msg must contain "source file" + "does not exist" (tests are picky).
-* Heavy work is in convert() so API can call it w/out caring about argparse.
-
-Minor improvements in this rewrite
-----------------------------------
-* Exit codes: 0 ok, 1 user/IO, 2 "uh-oh"
-* Logging via --verbose
-* Optional --stdin (nice for piping from other tools)
-"""
+"""Command line entry point and Pandoc/XeLaTeX renderer."""
 
 from __future__ import annotations
 
@@ -195,10 +174,7 @@ def convert_with_diagnostics(
 
 
 def convert(src: Path, dst: Path, markdown_format: str, template_path: Path) -> None:  # noqa: D401 – keep signature untouched
-    """Convert src md -> dst pdf.
-
-    NOTE: tests + API import this directly, so don't get clever w/ args.
-    """
+    """Convert a Markdown file to PDF."""
 
     convert_with_diagnostics(src, dst, markdown_format, template_path)
 
@@ -251,15 +227,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> None:  # noqa: D401 – CLI entry-point signature
     args = _parse_args(argv)
 
-    # logging: default to INFO (quiet-ish); -v flips to DEBUG
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
         format="%(levelname)s: %(message)s",
     )
 
-    # resolve input
     if args.stdin:
-        # read stdin into a temp file so we can reuse convert() as-is
+        # Pandoc needs a file path to resolve relative resources.
         stdin_markdown = sys.stdin.read()
         if not stdin_markdown.strip():
             print("Empty input on STDIN", file=sys.stderr)
@@ -272,7 +246,6 @@ def main(argv: list[str] | None = None) -> None:  # noqa: D401 – CLI entry-poi
         cleanup_tmp_src = True
     else:
         if args.source is None:
-            # tests want the magic substrings even when arg is missing
             print("source file does not exist", file=sys.stderr)
             sys.exit(1)
 
@@ -283,31 +256,24 @@ def main(argv: list[str] | None = None) -> None:  # noqa: D401 – CLI entry-poi
         print(f"source file does not exist: {src_path}", file=sys.stderr)
         sys.exit(1)
 
-    # resolve output; default next to input
-    dst_path = args.output or src_path.with_suffix(".pdf")
+    dst_path = args.output or (Path("stdin.pdf") if args.stdin else src_path.with_suffix(".pdf"))
 
-    # run it
     try:
         convert(src_path, dst_path, args.markdown_format, args.template)
     except FileNotFoundError as exc:
-        # user/config error (missing file/template/filter)
         print(exc, file=sys.stderr)
         sys.exit(1)
     except Exception as exc:
-        # unexpected: keep stderr message short, but log stack for debugging
         logging.exception("unhandled error in conversion")
         print(f"conversion error: {exc}", file=sys.stderr)
         sys.exit(2)
     finally:
-        # stdin mode drops a temp file in cwd; clean it up best-effort
         if cleanup_tmp_src:
             try:
                 src_path.unlink(missing_ok=True)
             except Exception:
-                # nothing to do here; it's a temp file anyway
                 pass
 
-    # ok
     print(f"✓ created {dst_path.resolve()}")
     sys.exit(0)
 

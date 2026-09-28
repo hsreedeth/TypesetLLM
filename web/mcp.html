@@ -14,18 +14,13 @@
       <h1 class="sr-only">TypesetLLM Model Context Protocol</h1>
       <a class="mcp-back" href="/">← TypesetLLM</a>
     </header>
-    <section class="mcp-demo" aria-label="TypesetLLM MCP demonstration">
-      <video class="mcp-demo-video" src="/static/branding/TypesetLLMDemo.mp4" poster="/static/branding/TypesetLLMDemo-poster.png" controls playsinline preload="metadata" aria-label="TypesetLLM MCP demonstration">
-        Your browser does not support video playback.
-      </video>
-    </section>
     <main class="mcp-shell">
       <header class="mcp-header">
         <p class="brand-description mcp-lede">Connect Codex to TypesetLLM with one command:</p>
         <pre class="mcp-code"><code>codex mcp add typesetllm --url https://typesetllm.onrender.com/mcp</code></pre>
         <p class="mcp-body mcp-client-label">Run <code>codex mcp list</code> to verify it was added. Reconnect or start a new Codex session if the tools do not appear.</p>
         <pre class="mcp-code"><code>Use TypesetLLM to convert report.md into a PDF and save it here.</code></pre>
-        <p class="mcp-body mcp-client-label">Rendering happens on TypesetLLM’s server. Your client downloads the resulting PDF into its workspace from a temporary link.</p>
+        <p class="mcp-body mcp-client-label">Rendering happens on TypesetLLM’s server. The tool returns a temporary PDF link; ask your client to download it when you need a local file.</p>
       </header>
 
       <section class="mcp-section" aria-labelledby="claude-heading">
@@ -51,7 +46,7 @@
 python -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
-codex mcp add typesetllm-local -- python /absolute/path/to/mcp/server.py</code></pre>
+codex mcp add typesetllm-local -- /absolute/path/to/TypesetLLM/mcp/.venv/bin/python /absolute/path/to/TypesetLLM/mcp/server.py</code></pre>
       </section>
       <footer class="footer-note mcp-footer"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
     </main>
