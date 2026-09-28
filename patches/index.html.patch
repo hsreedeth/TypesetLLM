@@ -1,0 +1,11 @@
+--- a/web/index.html	2026-09-26 13:56:54.124412815 +0000
++++ b/web/index.html	2026-09-26 13:56:54.125893122 +0000
+@@ -33,7 +33,7 @@
+         <p id="warnings" class="warnings" role="status" aria-live="polite"></p>
+         <iframe id="pdf-preview" class="pdf-preview" title="PDF preview"></iframe>
+       </section>
+-      <footer class="footer-note"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
++      <footer class="footer-note"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a><span>·</span><a href="/mcp">TypesetLLM-MCP</a></footer>
+     </main>
+     <div id="branding-overlay" class="branding-overlay intro-only" role="dialog" aria-modal="true" aria-labelledby="branding-dialog-title">
+       <h2 id="branding-dialog-title" class="sr-only">Introducing TypesetLLM</h2>

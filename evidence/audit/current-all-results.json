@@ -1,0 +1,134 @@
+[
+  {
+    "case": "01_basic",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "02_small_table",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "03_wide_table",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "04_math_dollars",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "05_math_brackets",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "06_unicode",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": [
+      "Unsupported glyphs may be absent from the PDF: \u4e2d (U+4E2D), \u6587 (U+6587), \u0627 (U+0627), \u0644 (U+0644), \u0639 (U+0639), \u0631 (U+0631), \u0628 (U+0628), \u064a (U+064A), \u0629 (U+0629), \u0939 (U+0939), \u093f (U+093F), \u0902 (U+0902), \u0926 (U+0926), \u0940 (U+0940), \u2717 (U+2717), \u26a0 (U+26A0), \ufe0f (U+FE0F), \ud83e\uddec (U+1F9EC)"
+    ]
+  },
+  {
+    "case": "07_long_code",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "08_multipage_table",
+    "status": "compiled",
+    "pages": 2,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "09_footnotes_lists",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "10_mermaid",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": [
+      "Mermaid diagrams are not rendered; the source block is shown as code."
+    ]
+  },
+  {
+    "case": "11_missing_image",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": [
+      "Missing image: missing-forest-plot.png"
+    ]
+  },
+  {
+    "case": "12_citation",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": [
+      "Unresolved citation keys: smith2024"
+    ]
+  },
+  {
+    "case": "13_metadata",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "14_currency",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "15_malformed_math",
+    "status": "input_error",
+    "error": "The Markdown contains an equation or construct that could not be typeset."
+  },
+  {
+    "case": "16_realistic_report",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "17_long_report",
+    "status": "compiled",
+    "pages": 6,
+    "missing_sentinels": [],
+    "warnings": []
+  },
+  {
+    "case": "18_basic_repeat",
+    "status": "compiled",
+    "pages": 1,
+    "missing_sentinels": [],
+    "warnings": []
+  }
+]

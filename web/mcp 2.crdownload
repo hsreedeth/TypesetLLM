@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TypesetLLM — MCP</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <link rel="stylesheet" href="/static/styles.css?v=phone5" />
+    <link rel="stylesheet" href="/static/mcp.css?v=1" />
+  </head>
+  <body>
+    <main class="mcp-shell">
+      <header class="mcp-header">
+        <a class="mcp-back" href="/">← TypesetLLM</a>
+        <h1>Typeset<span class="brand-suffix">LLM</span> · MCP</h1>
+        <p class="brand-description mcp-lede">
+          Call TypesetLLM as a tool from Claude, or any other MCP client, instead of pasting
+          Markdown into the browser. One tool renders a PDF and saves it locally; a second
+          checks whether the renderer is warmed up.
+        </p>
+        <a class="action-button mcp-github-button" href="https://github.com/hsreedeth/TypesetLLM/tree/main/mcp" target="_blank" rel="noreferrer">
+          View on GitHub
+        </a>
+      </header>
+
+      <section class="mcp-section" aria-labelledby="mcp-install-heading">
+        <h2 id="mcp-install-heading">Install</h2>
+        <pre class="mcp-code"><code>cd mcp
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt</code></pre>
+      </section>
+
+      <section class="mcp-section" aria-labelledby="mcp-claude-code-heading">
+        <h2 id="mcp-claude-code-heading">Add to Claude Code</h2>
+        <pre class="mcp-code"><code>claude mcp add typesetllm -- python /absolute/path/to/mcp/server.py</code></pre>
+      </section>
+
+      <section class="mcp-section" aria-labelledby="mcp-desktop-heading">
+        <h2 id="mcp-desktop-heading">Add to Claude Desktop</h2>
+        <p class="mcp-body">Add this to <code>claude_desktop_config.json</code> and restart Claude Desktop.</p>
+        <pre class="mcp-code"><code>{
+  "mcpServers": {
+    "typesetllm": {
+      "command": "python",
+      "args": ["/absolute/path/to/mcp/server.py"]
+    }
+  }
+}</code></pre>
+      </section>
+
+      <section class="mcp-section" aria-labelledby="mcp-tools-heading">
+        <h2 id="mcp-tools-heading">Tools</h2>
+        <dl class="mcp-tool-list">
+          <dt><code>convert_markdown_to_pdf</code></dt>
+          <dd>Renders Markdown to a typeset PDF via <code>/convert</code> and saves it locally. Returns the file path and any renderer quality warnings.</dd>
+          <dt><code>typesetllm_status</code></dt>
+          <dd>Pings <code>/ready</code> — useful since the hosted instance can cold-start after idling.</dd>
+        </dl>
+      </section>
+
+      <section class="mcp-section" aria-labelledby="mcp-config-heading">
+        <h2 id="mcp-config-heading">Configuration</h2>
+        <p class="mcp-body">Points at the public deployment by default. Override with environment variables to target a different instance or change where PDFs land:</p>
+        <table class="mcp-table">
+          <thead><tr><th>Variable</th><th>Default</th></tr></thead>
+          <tbody>
+            <tr><td><code>TYPESETLLM_URL</code></td><td><code>https://typesetllm.onrender.com</code></td></tr>
+            <tr><td><code>TYPESETLLM_OUTDIR</code></td><td><code>~/typesetllm-output</code></td></tr>
+            <tr><td><code>TYPESETLLM_TIMEOUT</code></td><td><code>90</code> seconds</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer class="footer-note mcp-footer"><span>Hari Sreedeth 2026</span><span>·</span><a href="https://github.com/hsreedeth/TypesetLLM" target="_blank" rel="noreferrer">GitHub</a></footer>
+    </main>
+  </body>
+</html>
