@@ -1,3 +1,5 @@
+![TypesetLLM cover: It looked fine in the chat. Then you tried making a PDF.](assets/readme-header.png)
+
 # TypesetLLM
 
 TypesetLLM turns Markdown into a PDF using a bundled LaTeX template. It is for people who write reports, notes, or technical documents in Markdown and want a PDF without editing LaTeX directly. You can render a local file from the command line, paste text into the web app, call the HTTP API, or connect an MCP client.
@@ -60,6 +62,8 @@ curl -f http://localhost:8000/convert \
 ```
 
 Successful responses are PDFs. Rendering warnings, such as missing images or unsupported glyphs, are returned in the `X-Typeset-Warnings` header. The default request cap is 1 MiB. A request can wait up to 45 seconds for a renderer slot, and the Pandoc process then has its own 45-second timeout. The default rate limit is 60 conversions per client address per hour. These values are configured with `MAX_REQUEST_BYTES`, `CONVERSION_TIMEOUT_SECONDS`, and `CONVERSION_RATE_LIMIT_PER_HOUR`; `MAX_CONCURRENT_CONVERSIONS` defaults to 1.
+
+![TypesetLLM Model Context Protocol cover](web/mcp-cover.png)
 
 ## MCP clients
 
