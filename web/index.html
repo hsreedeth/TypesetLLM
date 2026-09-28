@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TypesetLLM — Markdown to PDF</title>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
-    <link rel="stylesheet" href="/static/styles.css?v=mobile-gap1" />
+    <link rel="stylesheet" href="/static/styles.css?v=slide-demo1" />
   </head>
   <body class="branding-open">
     <main id="page-shell" class="page-shell" inert>
@@ -38,28 +38,38 @@
     </main>
     <div id="branding-overlay" class="branding-overlay intro-only" role="dialog" aria-modal="true" aria-labelledby="branding-dialog-title">
       <h2 id="branding-dialog-title" class="sr-only">Introducing TypesetLLM</h2>
-      <p id="branding-dialog-help" class="sr-only">Swipe down to close the slideshow on a touch screen, scroll down with a mouse, or press Escape.</p>
+      <p id="branding-dialog-help" class="sr-only">Swipe up or tap a slide to watch its demo. Swipe down from the demo to return to the slide. Swipe down from a slide or press Escape to close the slideshow.</p>
       <div class="branding-intro"><video id="intro-video" src="/static/branding/branding-4.mp4?v=desktop2" poster="/static/branding/branding-4-start.png?v=desktop2" muted playsinline preload="auto" aria-label="Animated TypesetLLM introduction"></video></div>
-      <section class="branding-carousel">
-        <div id="branding-slides" class="branding-slides" tabindex="0" aria-label="Swipe to view five branding slides" aria-describedby="branding-dialog-help">
-          <div class="branding-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-1.png?v=phone5" /><img src="/static/branding/branding-1.png?v=desktop2" alt="TypesetLLM report typography on a cream background" /></picture></div>
-          <div class="branding-slide branding-table-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-2.png?v=phone5" /><img src="/static/branding/branding-2.png?v=desktop2" alt="A red TypesetLLM slide showing a formatted report table" /></picture></div>
-          <div class="branding-slide branding-code-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-3.png?v=phone5" /><img src="/static/branding/branding-3.png?v=desktop2" alt="An orange TypesetLLM slide showing highlighted code" /></picture></div>
-          <div class="branding-slide branding-mcp-slide"><img src="/static/branding/branding-mcp.png" alt="TypesetLLM Model Context Protocol slide: one command to connect" /></div>
-          <div class="branding-slide branding-video-slide"><video id="branding-video" src="/static/branding/branding-4.mp4?v=desktop2" poster="/static/branding/branding-4-start.png?v=desktop2" muted playsinline preload="auto" aria-label="Animated TypesetLLM branding finale"></video></div>
-        </div>
-        <div class="branding-navigation">
-          <div id="branding-dots" class="branding-dots" role="group" aria-label="Choose branding slide">
-            <button type="button" aria-label="Slide 1" aria-current="true"></button>
-            <button type="button" aria-label="Slide 2"></button>
-            <button type="button" aria-label="Slide 3"></button>
-            <button type="button" aria-label="Slide 4"></button>
-            <button type="button" aria-label="Slide 5"></button>
+      <section id="branding-carousel" class="branding-carousel">
+        <div class="branding-reel">
+          <div class="branding-slide-stage">
+            <div id="branding-slides" class="branding-slides" tabindex="0" aria-label="Swipe to view five branding slides" aria-describedby="branding-dialog-help">
+              <div class="branding-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-1.png?v=phone5" /><img src="/static/branding/branding-1.png?v=desktop2" alt="TypesetLLM report typography on a cream background" /></picture></div>
+              <div class="branding-slide branding-table-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-2.png?v=phone5" /><img src="/static/branding/branding-2.png?v=desktop2" alt="A red TypesetLLM slide showing a formatted report table" /></picture></div>
+              <div class="branding-slide branding-code-slide"><picture><source media="(max-width: 600px) and (orientation: portrait)" srcset="/static/branding/phone-3.png?v=phone5" /><img src="/static/branding/branding-3.png?v=desktop2" alt="An orange TypesetLLM slide showing highlighted code" /></picture></div>
+              <div class="branding-slide branding-mcp-slide"><img src="/static/branding/branding-mcp.png" alt="TypesetLLM Model Context Protocol slide: one command to connect" /></div>
+              <div class="branding-slide branding-video-slide"><video id="branding-video" src="/static/branding/branding-4.mp4?v=desktop2" poster="/static/branding/branding-4-start.png?v=desktop2" muted playsinline preload="auto" aria-label="Animated TypesetLLM branding finale"></video></div>
+            </div>
+            <div class="branding-navigation">
+              <button id="watch-demo-button" class="branding-watch-demo" type="button" aria-controls="branding-demo-stage" aria-expanded="false">watch demo</button>
+              <div id="branding-dots" class="branding-dots" role="group" aria-label="Choose branding slide">
+                <button type="button" aria-label="Slide 1" aria-current="true"></button>
+                <button type="button" aria-label="Slide 2"></button>
+                <button type="button" aria-label="Slide 3"></button>
+                <button type="button" aria-label="Slide 4"></button>
+                <button type="button" aria-label="Slide 5"></button>
+              </div>
+              <span id="branding-count" class="sr-only" aria-live="polite">1 / 5</span>
+            </div>
           </div>
-          <span id="branding-count" class="sr-only" aria-live="polite">1 / 5</span>
+          <div id="branding-demo-stage" class="branding-demo-stage" role="region" aria-label="Slide demo" inert>
+            <video id="branding-demo-video" class="branding-demo-video" src="/static/branding/Demo.mp4" controls playsinline preload="metadata" tabindex="0" aria-label="TypesetLLM demo"></video>
+            <video id="branding-mcp-demo-video" class="branding-demo-video" src="/static/branding/TypesetLLMDemo.mp4" poster="/static/branding/TypesetLLMDemo-poster.png" controls playsinline preload="metadata" tabindex="0" aria-label="TypesetLLM MCP demo" hidden></video>
+            <button id="branding-demo-back" class="branding-demo-back" type="button" aria-label="Back to slide">↓ <span>back to slide</span></button>
+          </div>
         </div>
       </section>
     </div>
-    <script src="/static/app.js?v=phone6"></script>
+    <script src="/static/app.js?v=slide-demo1"></script>
   </body>
 </html>
