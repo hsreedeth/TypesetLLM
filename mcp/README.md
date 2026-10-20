@@ -22,7 +22,7 @@ See [Claude Code's remote MCP setup](https://code.claude.com/docs/en/mcp#option-
 
 TypesetLLM renders on its server. The client can download the PDF from a temporary HTTPS link into its workspace. Downloads expire after 15 minutes and may disappear sooner if the server restarts.
 
-The server offers `convert_markdown_to_pdf` and `typesetllm_status`. See the [integration guide](https://typesetllm.onrender.com/integrations) for more detail.
+The server offers `convert_markdown_to_pdf` and `typesetllm_status`. Pass `theme: "rolepilot-resume"`, `rolepilot-letter`, or `rolepilot-criteria` for reviewed application documents; see the [RolePilot contract](../docs/rolepilot.md). See the [integration guide](https://typesetllm.onrender.com/integrations) for more detail.
 
 ## Optional local adapter
 

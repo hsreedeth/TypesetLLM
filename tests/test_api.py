@@ -227,3 +227,21 @@ async def test_invalid_json_rejected(client: AsyncClient):
         headers={"content-type": "application/json"},
     )
     assert resp.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.asyncio
+async def test_rolepilot_theme_selection_and_unknown_theme(client: AsyncClient):
+    markdown = "---\nrolepilot_contract: 1\n---\n\n# Avery Chen\n\n## Profile\n\nHealth analyst."
+    for theme in ("rolepilot-resume", "rolepilot-letter", "rolepilot-criteria"):
+        response = await client.post("/convert", json={"markdown_text": markdown, "theme": theme})
+        assert response.status_code == 200, response.text
+        assert response.headers["x-typeset-theme"] == theme
+        assert response.headers["x-typeset-theme-version"] == "1.0.0"
+        assert response.content.startswith(b"%PDF-")
+    unknown = await client.post("/convert", json={"markdown_text": markdown, "theme": "../../vintage"})
+    assert unknown.status_code == 400
+    assert "Unknown theme" in unknown.json()["detail"]["message"]
+    assert unknown.json()["detail"]["reference"]
+    bad_metadata = await client.post("/convert", json={"markdown_text": "---\nrolepilot_contract: 1\nevidence_id: private\n---\n\n# Avery Chen", "theme": "rolepilot-resume"})
+    assert bad_metadata.status_code == 400
+    assert "Unsupported RolePilot metadata" in bad_metadata.json()["detail"]["message"]

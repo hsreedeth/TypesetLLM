@@ -14,6 +14,10 @@ codex mcp add typesetllm --url https://typesetllm.onrender.com/mcp
 
 Check with `codex mcp list`, then reconnect or start a new Codex session if needed. Ask: “Use TypesetLLM to convert report.md into a PDF and save it here.” TypesetLLM renders on its server and returns a temporary HTTPS link; the client downloads the PDF into its workspace. See the [integration guide](https://typesetllm.onrender.com/integrations) and [MCP details](mcp/README.md).
 
+## RolePilot application documents
+
+Three versioned themes render reviewed Markdown without changing its content: `rolepilot-resume`, `rolepilot-letter`, and `rolepilot-criteria`. See the [input contract and examples](docs/rolepilot.md). These layouts are designed for straightforward parsing; no universal ATS compatibility is claimed.
+
 ## Requirements
 
 - Python 3.11+

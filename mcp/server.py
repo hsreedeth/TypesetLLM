@@ -26,7 +26,7 @@ import unicodedata
 from pathlib import Path
 
 import httpx
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
 TYPESETLLM_URL = os.environ.get("TYPESETLLM_URL", "https://typesetllm.onrender.com").rstrip("/")
 OUTDIR = Path(os.environ.get("TYPESETLLM_OUTDIR", str(Path.home() / "typesetllm-output")))
@@ -36,7 +36,7 @@ TIMEOUT = float(os.environ.get("TYPESETLLM_TIMEOUT", "90"))
 # fast locally with a clear message instead of waiting on a 413 round trip.
 MAX_REQUEST_BYTES = int(os.environ.get("TYPESETLLM_MAX_BYTES", "1048576"))
 
-mcp = FastMCP("typesetllm")
+mcp = MCPServer("typesetllm")
 
 
 def _slugify(text: str, fallback: str = "output") -> str:
@@ -56,7 +56,7 @@ def _derive_stem(markdown_text: str) -> str:
 
 
 @mcp.tool()
-def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> str:
+def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None, theme: str = "vintage") -> str:
     """
     Render Markdown into a handout-style, typeset PDF (via Pandoc + XeLaTeX)
     and save it to disk.
@@ -69,6 +69,7 @@ def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> 
 
     Args:
         markdown_text: The Markdown source to render.
+        theme: Built-in theme name; defaults to vintage.
         filename: Optional output filename (without extension). If omitted,
             it's derived from the document's first heading.
 
@@ -87,7 +88,7 @@ def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> 
     try:
         resp = httpx.post(
             f"{TYPESETLLM_URL}/convert",
-            json={"markdown_text": markdown_text},
+            json={"markdown_text": markdown_text, "theme": theme},
             timeout=TIMEOUT,
         )
     except httpx.TimeoutException:
@@ -113,7 +114,10 @@ def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> 
     out_path.write_bytes(resp.content)
 
     warnings = resp.headers.get("X-Typeset-Warnings")
+    version = resp.headers.get("X-Typeset-Theme-Version")
     msg = f"Saved PDF to {out_path}"
+    if version:
+        msg += f" (theme {theme} v{version})"
     if warnings:
         msg += f"\n\nQuality warnings from the renderer: {warnings}"
     return msg

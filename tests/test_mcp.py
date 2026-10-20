@@ -60,6 +60,36 @@ print('hello')
             assert names == {"convert_markdown_to_pdf", "typesetllm_status"}
             renderer = await call(client, "tools/call", {"name": "typesetllm_status", "arguments": {}})
             assert renderer["isError"] is False
+            assert "rolepilot-resume" in json.dumps(renderer)
+
+            application = """---
+rolepilot_contract: 1
+---
+
+# Avery Chen
+
+[avery.chen@example.org](mailto:avery.chen@example.org)
+
+## Profile
+
+Health data analyst with reproducible methods.
+"""
+            for rolepilot_theme in ("rolepilot-resume", "rolepilot-letter", "rolepilot-criteria"):
+                themed = await call(client, "tools/call", {
+                    "name": "convert_markdown_to_pdf",
+                    "arguments": {"markdown_text": application, "theme": rolepilot_theme},
+                })
+                assert themed["isError"] is False
+                assert themed["structuredContent"]["theme"] == rolepilot_theme
+                assert themed["structuredContent"]["template_version"] == "1.0.0"
+                themed_pdf = await client.get(urlparse(themed["structuredContent"]["download_url"]).path)
+                assert themed_pdf.content.startswith(b"%PDF-")
+            unknown = await call(client, "tools/call", {
+                "name": "convert_markdown_to_pdf",
+                "arguments": {"markdown_text": application, "theme": "../../vintage"},
+            })
+            assert unknown["isError"] is True
+            assert "Unknown theme" in unknown["content"][0]["text"]
 
             result = await call(client, "tools/call", {
                 "name": "convert_markdown_to_pdf", "arguments": {"markdown_text": markdown},

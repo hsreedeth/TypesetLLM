@@ -25,6 +25,7 @@ Minor improvements in this rewrite
 from __future__ import annotations
 
 import argparse
+import json
 from dataclasses import dataclass
 import logging
 import os
@@ -37,6 +38,8 @@ from tempfile import NamedTemporaryFile
 from typing import Final
 
 import pypandoc
+
+from src.themes import get_theme, theme_catalog, validate_rolepilot_markdown
 
 # bundled stuff lives relative to repo root (keeps docker + tests happier)
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
@@ -160,9 +163,11 @@ def convert_with_diagnostics(
     if markdown_format and markdown_format.lower() != "auto":
         command.extend(["-f", markdown_format])
 
+    process_env = os.environ.copy()
+    process_env["TEXINPUTS"] = os.pathsep.join((str(template_path.resolve().parent), str(BASE_DIR / "templates"), process_env.get("TEXINPUTS", "")))
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-        start_new_session=True,
+        start_new_session=True, env=process_env,
     )
     try:
         _, stderr = process.communicate(timeout=CONVERSION_TIMEOUT_SECONDS)
@@ -191,6 +196,11 @@ def convert_with_diagnostics(
     markdown = src.read_text(encoding="utf-8")
     warnings = _preflight_warnings(markdown, src.parent)
     warnings.extend(_diagnostic_warnings(diagnostics))
+    if template_path.name.startswith("rolepilot-") and any(
+        warning.startswith("Unsupported glyphs") for warning in warnings
+    ):
+        raise ConversionError("The selected font cannot render every character in this application.", diagnostics,
+                              input_error=True)
     return ConversionResult(tuple(dict.fromkeys(warnings)), diagnostics)
 
 
@@ -243,6 +253,8 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=DEFAULT_TEMPLATE,
         help="Path to LaTeX template (.tex).",
     )
+    parser.add_argument("--theme", help="Built-in theme name; omitted means vintage.")
+    parser.add_argument("--list-themes", action="store_true", help="Print built-in themes and versions.")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable debug logging.")
 
     return parser.parse_args(argv)
@@ -250,6 +262,17 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> None:  # noqa: D401 – CLI entry-point signature
     args = _parse_args(argv)
+    if args.list_themes:
+        print(json.dumps(theme_catalog(), indent=2))
+        return
+    if args.theme and args.template != DEFAULT_TEMPLATE:
+        print("--theme and --template cannot be combined.", file=sys.stderr)
+        sys.exit(1)
+    try:
+        selected_theme = get_theme(args.theme or "vintage")
+    except ValueError as exc:
+        print(exc, file=sys.stderr)
+        sys.exit(1)
 
     # logging: default to INFO (quiet-ish); -v flips to DEBUG
     logging.basicConfig(
@@ -283,12 +306,21 @@ def main(argv: list[str] | None = None) -> None:  # noqa: D401 – CLI entry-poi
         print(f"source file does not exist: {src_path}", file=sys.stderr)
         sys.exit(1)
 
+    if selected_theme.contract_version:
+        try:
+            validate_rolepilot_markdown(src_path.read_text(encoding="utf-8"), selected_theme)
+        except ValueError as exc:
+            print(exc, file=sys.stderr)
+            sys.exit(1)
+
     # resolve output; default next to input
     dst_path = args.output or src_path.with_suffix(".pdf")
 
     # run it
     try:
-        convert(src_path, dst_path, args.markdown_format, args.template)
+        fmt = WEB_MARKDOWN_FORMAT if selected_theme.contract_version and args.markdown_format == DEFAULT_MARKDOWN_FORMAT else args.markdown_format
+        template = selected_theme.template if args.theme else args.template
+        convert(src_path, dst_path, fmt, template)
     except FileNotFoundError as exc:
         # user/config error (missing file/template/filter)
         print(exc, file=sys.stderr)

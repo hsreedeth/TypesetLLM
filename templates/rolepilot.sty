@@ -1,0 +1,65 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{rolepilot}[2026/10/20 v1.0.0 application document layout]
+\RequirePackage{kvoptions}
+\SetupKeyvalOptions{family=rolepilot,prefix=rp@}
+\DeclareBoolOption{resume}
+\DeclareBoolOption{letter}
+\DeclareBoolOption{criteria}
+\ProcessKeyvalOptions*
+\RequirePackage[a4paper,margin=19mm]{geometry}
+\ifrp@resume\geometry{margin=18mm}\fi
+\ifrp@letter\geometry{margin=20mm}\fi
+\RequirePackage{fontspec}
+\newif\ifRolePilotSourceAvailable
+\RolePilotSourceAvailabletrue
+\IfFileExists{\RolePilotFontDir SourceSans3-Regular.ttf}{}{\RolePilotSourceAvailablefalse}
+\IfFileExists{\RolePilotFontDir SourceSans3-Semibold.ttf}{}{\RolePilotSourceAvailablefalse}
+\IfFileExists{\RolePilotFontDir SourceSans3-Bold.ttf}{}{\RolePilotSourceAvailablefalse}
+\IfFileExists{\RolePilotFontDir SourceSans3-It.ttf}{}{\RolePilotSourceAvailablefalse}
+\IfFileExists{\RolePilotFontDir SourceSans3-BoldIt.ttf}{}{\RolePilotSourceAvailablefalse}
+\ifRolePilotSourceAvailable
+  \setmainfont{SourceSans3-Regular.ttf}[Path=\RolePilotFontDir,BoldFont=SourceSans3-Bold.ttf,ItalicFont=SourceSans3-It.ttf,BoldItalicFont=SourceSans3-BoldIt.ttf,Ligatures=TeX]
+  \setsansfont{SourceSans3-Regular.ttf}[Path=\RolePilotFontDir,BoldFont=SourceSans3-Bold.ttf,ItalicFont=SourceSans3-It.ttf,BoldItalicFont=SourceSans3-BoldIt.ttf]
+  \newfontfamily\rolepilotsemi{SourceSans3-Semibold.ttf}[Path=\RolePilotFontDir]
+\else
+  \setmainfont{Inter-Variable.ttf}[Path=\RolePilotFontDir,Ligatures=TeX]
+  \setsansfont{Inter-Variable.ttf}[Path=\RolePilotFontDir]
+  \newfontfamily\rolepilotsemi{Inter-Variable.ttf}[Path=\RolePilotFontDir]
+\fi
+\setmonofont{FiraCode-Regular.ttf}[Path=\RolePilotFontDir,Scale=0.82]
+\RequirePackage{microtype}
+\RequirePackage{titlesec}
+\RequirePackage{enumitem}
+\RequirePackage{hyperref}
+\RequirePackage{xurl}
+\RequirePackage{graphicx}
+\RequirePackage{longtable}
+\RequirePackage{booktabs}
+\RequirePackage{array}
+\RequirePackage{calc}
+\RequirePackage{amsmath,amssymb}
+\RequirePackage{fvextra}
+\hypersetup{hidelinks,breaklinks=true}
+\urlstyle{same}
+\setcounter{secnumdepth}{0}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.34em plus 0.08em minus 0.05em}
+\ifrp@letter\setlength{\parskip}{0.62em plus 0.08em minus 0.05em}\fi
+\ifrp@criteria\setlength{\parskip}{0.48em plus 0.08em minus 0.05em}\fi
+\setlength{\emergencystretch}{2em}
+\widowpenalty=10000
+\clubpenalty=10000
+\ifrp@resume\fontsize{10.7pt}{13.1pt}\selectfont\fi
+\ifrp@letter\fontsize{11pt}{14.1pt}\selectfont\fi
+\ifrp@criteria\fontsize{11pt}{14pt}\selectfont\fi
+\titleformat{\section}[hang]{\normalfont\rolepilotsemi\fontsize{22pt}{25pt}\selectfont\raggedright}{}{0pt}{}
+\titlespacing*{\section}{0pt}{0pt}{6pt}
+\titleformat{\subsection}[hang]{\normalfont\rolepilotsemi\fontsize{11.7pt}{14pt}\selectfont\raggedright}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{12pt plus 2pt minus 2pt}{4pt}
+\titleformat{\subsubsection}[hang]{\normalfont\rolepilotsemi\fontsize{10.8pt}{13pt}\selectfont\raggedright}{}{0pt}{}
+\titlespacing*{\subsubsection}{0pt}{8pt plus 2pt minus 1pt}{2pt}
+\setlist[itemize]{leftmargin=5mm,topsep=3pt,itemsep=1.5pt,parsep=0pt,partopsep=0pt}
+\setlist[enumerate]{leftmargin=6mm,topsep=3pt,itemsep=1.5pt,parsep=0pt,partopsep=0pt}
+\providecommand{\tightlist}{\setlength{\itemsep}{1pt}\setlength{\parskip}{0pt}}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\},breaklines=true,breakanywhere=true,fontsize=\small}

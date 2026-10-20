@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 # — Build-time arguments —
 # extarrows provides \xleftrightarrow, which the vintage template supports.
-ARG TL_PACKAGES="adjustbox amsmath amssymb babel-english booktabs caption colortbl enumitem extarrows fancyhdr float fontspec framed fvextra geometry graphics hyperref listings longtable microtype multirow pdflscape rotating setspace subcaption tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval collection-fontsrecommended collection-latexrecommended"
+ARG TL_PACKAGES="adjustbox amsmath amssymb babel-english booktabs caption colortbl enumitem extarrows fancyhdr float fontspec framed fvextra geometry graphics hyperref listings longtable microtype multirow pdflscape rotating setspace subcaption tabularx tcolorbox titlesec tocloft unicode-math xcolor xkeyval xurl collection-fontsrecommended collection-latexrecommended"
 ARG PANDOC_VERSION=3.2
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -42,7 +42,7 @@ RUN set -eux; \
       [ "$base" = "tlmgr" ] && continue; \
       ln -s "$f" /usr/local/bin/"$base"; \
     done; \
-    for sty in adjustbox.sty amsmath.sty amssymb.sty array.sty booktabs.sty calc.sty extarrows.sty fancyhdr.sty fvextra.sty fontspec.sty graphicx.sty hyperref.sty longtable.sty multicol.sty pdflscape.sty titlesec.sty xfp.sty; do \
+    for sty in adjustbox.sty amsmath.sty amssymb.sty array.sty booktabs.sty calc.sty extarrows.sty fancyhdr.sty fvextra.sty fontspec.sty graphicx.sty hyperref.sty longtable.sty multicol.sty pdflscape.sty titlesec.sty xfp.sty xurl.sty enumitem.sty microtype.sty kvoptions.sty; do \
       kpsewhich "$sty" >/dev/null || { echo "Required LaTeX package missing: $sty"; exit 1; }; \
     done
 
@@ -55,6 +55,7 @@ COPY src ./src
 COPY templates ./templates
 COPY filters ./filters
 COPY fonts ./fonts
+RUN for face in Regular Semibold Bold It BoldIt; do test -s "fonts/SourceSans3-${face}.ttf"; done && test -s fonts/OFL_SourceSans3.txt
 COPY web ./web
 COPY run_local.py ./
 COPY tests/test_mcp.py ./tests/test_mcp.py

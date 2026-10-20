@@ -9,3 +9,6 @@ animation/node_modules/
 .DS_Store
 Thumbs.db
 *.pdf
+
+# Reviewed RolePilot examples include rendered PDFs for visual inspection.
+!examples/rolepilot/*.pdf

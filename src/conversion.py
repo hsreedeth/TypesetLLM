@@ -8,13 +8,13 @@ from dataclasses import dataclass
 import logging
 import os
 from pathlib import Path
-import re
 import shutil
 import tempfile
 import time
 import uuid
 
 from src.cli import CONVERSION_TIMEOUT_SECONDS, ConversionError, ConversionResult, WEB_MARKDOWN_FORMAT, convert_with_diagnostics
+from src.themes import get_theme, validate_rolepilot_markdown
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -25,7 +25,6 @@ ALLOW_RAW_TEX = os.environ.get("ALLOW_RAW_TEX", "false").lower() in {"1", "true"
 _slots = asyncio.Semaphore(MAX_CONCURRENT_CONVERSIONS)
 _rate_lock = asyncio.Lock()
 _requests: dict[str, deque[float]] = defaultdict(deque)
-_theme_re = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 @dataclass
@@ -61,11 +60,12 @@ async def render_markdown(markdown: str, theme: str, client_key: str) -> Rendere
         raise ConversionFailure("Markdown text is required.", 422)
     if len(markdown.encode("utf-8")) > MAX_REQUEST_BYTES:
         raise ConversionFailure("Markdown exceeds the input size limit.", 413)
-    if not isinstance(theme, str) or not _theme_re.fullmatch(theme):
-        raise ConversionFailure("Invalid theme name.", 400)
-    template = TEMPLATES_DIR / f"{theme}.tex"
-    if not template.is_file():
-        template = TEMPLATES_DIR / "vintage.tex"
+    try:
+        selected = get_theme(theme)
+        validate_rolepilot_markdown(markdown, selected)
+    except ValueError as exc:
+        raise ConversionFailure(str(exc), 400) from exc
+    template = selected.template
     if not template.is_file():
         raise ConversionFailure("Template missing on server.", 500)
     await _check_rate_limit(client_key)
@@ -81,7 +81,7 @@ async def render_markdown(markdown: str, theme: str, client_key: str) -> Rendere
             acquired = True
         except asyncio.TimeoutError as exc:
             raise ConversionFailure("Renderer is busy; try again later.", 503) from exc
-        fmt = WEB_MARKDOWN_FORMAT if not ALLOW_RAW_TEX else WEB_MARKDOWN_FORMAT.replace("-raw_tex", "+raw_tex")
+        fmt = WEB_MARKDOWN_FORMAT if selected.contract_version or not ALLOW_RAW_TEX else WEB_MARKDOWN_FORMAT.replace("-raw_tex", "+raw_tex")
         worker = asyncio.create_task(asyncio.to_thread(convert_with_diagnostics, source, output, fmt, template))
         try:
             result: ConversionResult = await asyncio.shield(worker)

@@ -16,6 +16,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from src.conversion import ConversionFailure, MAX_REQUEST_BYTES, render_markdown
 from src.downloads import DownloadStore
 from src.naming import output_filename
+from src.themes import get_theme
 
 client_ip: ContextVar[str] = ContextVar("typesetllm_client_ip", default="unknown")
 
@@ -26,6 +27,8 @@ class ConversionDelivery(TypedDict):
     expires_at: str
     warnings: list[str]
     message: str
+    theme: str
+    template_version: str
 
 
 class ClientAddressMiddleware:
@@ -49,10 +52,10 @@ def build_mcp(app: FastAPI, store: DownloadStore, public_base_url: str, extra_ho
     server = MCPServer("TypesetLLM", instructions="Render Markdown to PDF. Download the returned URL into the client's workspace when the user requests a local file.")
 
     @server.tool(structured_output=True)
-    async def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None) -> ConversionDelivery:
+    async def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None, theme: str = "vintage") -> ConversionDelivery:
         """Render Markdown as a PDF. Read local .md files into markdown_text first; download the returned HTTPS URL into the client's workspace when a local PDF is requested."""
         try:
-            rendered = await render_markdown(markdown_text, "vintage", client_ip.get())
+            rendered = await render_markdown(markdown_text, theme, client_ip.get())
         except ConversionFailure as exc:
             raise ToolError(f"{exc} Reference ID: {exc.reference}") from exc
         try:
@@ -69,6 +72,8 @@ def build_mcp(app: FastAPI, store: DownloadStore, public_base_url: str, extra_ho
             "expires_at": item.expires_at.isoformat(),
             "warnings": list(rendered.warnings),
             "message": "The PDF was rendered on TypesetLLM's server. Download the URL into your own workspace to save it here.",
+            "theme": theme,
+            "template_version": get_theme(theme).version,
         }
 
     @server.tool()

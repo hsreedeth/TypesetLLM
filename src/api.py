@@ -20,17 +20,18 @@ from src.conversion import ALLOW_RAW_TEX, ConversionFailure, MAX_REQUEST_BYTES, 
 from src.downloads import DownloadStore
 from src.hosted_mcp import build_mcp
 from src.naming import output_filename
+from src.themes import get_theme, theme_catalog
 
 @asynccontextmanager
 async def renderer_lifespan(application: FastAPI):
     from src.smoke import run_smoke_check
 
     try:
-        application.state.renderer_readiness = await asyncio.to_thread(run_smoke_check)
+        application.state.renderer_readiness = {**await asyncio.to_thread(run_smoke_check), "themes": theme_catalog()}
     except Exception:
         reference = uuid.uuid4().hex[:12]
         logging.exception("Renderer readiness failed [%s]", reference)
-        application.state.renderer_readiness = {"status": "unavailable", "reference": reference}
+        application.state.renderer_readiness = {"status": "unavailable", "reference": reference, "themes": theme_catalog()}
     async with mcp_server.session_manager.run():
         cleanup_task = asyncio.create_task(_purge_downloads())
         try:
@@ -53,7 +54,7 @@ async def _purge_downloads() -> None:
 app = FastAPI(title="Markdown → PDF API", version="0.5.1", lifespan=renderer_lifespan)
 
 
-app.state.renderer_readiness = {"status": "starting"}
+app.state.renderer_readiness = {"status": "starting", "themes": theme_catalog()}
 
 
 BASE_DIR: Final[Path] = Path(__file__).resolve().parent.parent
@@ -182,6 +183,9 @@ async def convert_endpoint(request: Request):  # noqa: D401
         background=background_tasks,
     )
     response.headers["X-Typeset-Warnings"] = json.dumps(rendered.warnings, ensure_ascii=True)
+    selected = get_theme(theme)
+    response.headers["X-Typeset-Theme"] = selected.name
+    response.headers["X-Typeset-Theme-Version"] = selected.version
     return response
 
 
