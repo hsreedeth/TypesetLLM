@@ -96,3 +96,9 @@ python -m pytest -q
 - MCP PDFs are temporary and expire after 15 minutes by default. A restart removes them; multiple app instances need shared storage for downloads and coordinated limits.
 
 MIT License.
+
+### Usage analytics
+
+Optional anonymous visitor and conversion metrics can be sent to PostHog.
+See [setup and event definitions](docs/analytics.md). Tracking delivery is disabled
+until `POSTHOG_PROJECT_KEY` is configured in the server environment.

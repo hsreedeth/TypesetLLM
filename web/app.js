@@ -1,3 +1,23 @@
+// Anonymous browser ID; opt out with Do Not Track or localStorage typesetllm-analytics=off.
+let analyticsId = null;
+try {
+  if (navigator.doNotTrack !== '1' && localStorage.getItem('typesetllm-analytics') !== 'off') {
+    analyticsId = localStorage.getItem('typesetllm-visitor');
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(analyticsId || '')) {
+      analyticsId = crypto.randomUUID();
+      localStorage.setItem('typesetllm-visitor', analyticsId);
+    }
+  }
+} catch (_) { /* Storage unavailable: conversion still works. */ }
+function trackUsage(event) {
+  if (!analyticsId) return;
+  fetch('/analytics/events', {
+    method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({event, visitor_id: analyticsId}), keepalive: true,
+  }).catch(() => {});
+}
+trackUsage('page_view');
+
 const textarea = document.getElementById('markdown-input');
 const fileInput = document.getElementById('file-input');
 const uploadButton = document.getElementById('upload-button');
@@ -79,7 +99,7 @@ async function convertMarkdown() {
   try {
     const response = await fetch('/convert', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(analyticsId ? {'X-Analytics-ID': analyticsId} : {'X-Analytics-Opt-Out': '1'}) },
       body: JSON.stringify({ markdown_text: markdownText }),
       signal: controller.signal,
     });
@@ -116,6 +136,7 @@ async function convertMarkdown() {
 
 function downloadPdf() {
   if (!pdfBlobUrl) return;
+  trackUsage('download_clicked');
   const link = document.createElement('a');
   link.href = pdfBlobUrl;
   link.download = pdfFilename;

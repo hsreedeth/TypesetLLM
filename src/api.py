@@ -17,6 +17,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from src.conversion import ALLOW_RAW_TEX, ConversionFailure, MAX_REQUEST_BYTES, render_markdown
+from src.analytics import capture, visitor_id
 from src.downloads import DownloadStore
 from src.hosted_mcp import build_mcp
 from src.naming import output_filename
@@ -131,6 +132,44 @@ if WEB_DIR.is_dir():
 
 if FONTS_DIR.is_dir():
     app.mount("/fonts", StaticFiles(directory=FONTS_DIR), name="fonts")
+
+
+@app.middleware("http")
+async def conversion_analytics(request: Request, call_next):
+    if request.url.path != "/convert" or request.method != "POST":
+        return await call_next(request)
+    if request.headers.get("DNT") == "1" or request.headers.get("X-Analytics-Opt-Out") == "1":
+        return await call_next(request)
+    identity = visitor_id(request.headers.get("X-Analytics-ID"))
+    channel = "web" if request.headers.get("X-Analytics-ID") else "api"
+    try:
+        response = await call_next(request)
+    except Exception:
+        capture("conversion_failed", identity, channel, 500)
+        raise
+    event = "conversion_succeeded" if response.status_code == 200 else "conversion_failed"
+    capture(event, identity, channel, response.status_code)
+    return response
+
+
+@app.post("/analytics/events", status_code=204, include_in_schema=False)
+async def browser_analytics(request: Request):
+    # A small, fixed schema: never forward arbitrary properties or document content.
+    if request.headers.get("DNT") == "1":
+        return
+    body = bytearray()
+    async for chunk in request.stream():
+        body.extend(chunk)
+        if len(body) > 512:
+            raise HTTPException(413, "Event too large")
+    try:
+        payload = json.loads(body)
+        if not isinstance(payload, dict) or payload.get("event") not in {"page_view", "download_clicked"}:
+            raise ValueError()
+        identity = str(uuid.UUID(payload["visitor_id"]))
+    except (ValueError, KeyError, TypeError):
+        raise HTTPException(400, "Invalid event")
+    capture(payload["event"], identity, "web")
 
 
 @app.get("/", include_in_schema=False)

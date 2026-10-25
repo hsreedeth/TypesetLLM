@@ -14,6 +14,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.server.transport_security import TransportSecuritySettings
 
 from src.conversion import ConversionFailure, MAX_REQUEST_BYTES, render_markdown
+from src.analytics import capture
 from src.downloads import DownloadStore
 from src.naming import output_filename
 from src.themes import get_theme
@@ -54,18 +55,25 @@ def build_mcp(app: FastAPI, store: DownloadStore, public_base_url: str, extra_ho
     @server.tool(structured_output=True)
     async def convert_markdown_to_pdf(markdown_text: str, filename: str | None = None, theme: str = "vintage") -> ConversionDelivery:
         """Render Markdown as a PDF. Read local .md files into markdown_text first; download the returned HTTPS URL into the client's workspace when a local PDF is requested."""
+        identity = str(uuid.uuid4())
         try:
             rendered = await render_markdown(markdown_text, theme, client_ip.get())
         except ConversionFailure as exc:
+            capture("conversion_failed", identity, "mcp", exc.status_code)
             raise ToolError(f"{exc} Reference ID: {exc.reference}") from exc
+        except Exception:
+            capture("conversion_failed", identity, "mcp", 500)
+            raise
         try:
             token, item = store.put(rendered.path, output_filename(markdown_text, filename))
         except Exception as exc:
+            capture("conversion_failed", identity, "mcp", 500)
             reference = uuid.uuid4().hex[:12]
             logging.exception("PDF delivery failed [%s]", reference)
             raise ToolError(f"Could not prepare the PDF download. Reference ID: {reference}") from exc
         finally:
             rendered.cleanup()
+        capture("conversion_succeeded", identity, "mcp", 200)
         return {
             "download_url": f"{public_base_url}/downloads/{token}.pdf",
             "filename": item.filename,
